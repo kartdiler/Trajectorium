@@ -47,8 +47,6 @@ public class Main extends Application {
         Group root = new Group();
         Canvas canvas = new Canvas(canvasWidth, canvasHeight);
         GraphicsContext gc = canvas.getGraphicsContext2D();
-//        gc.setFill(Color.BLACK);
-//        gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
         root.getChildren().add(canvas);
 
         AnimationTimer timer = new AnimationTimer() {
