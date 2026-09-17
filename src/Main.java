@@ -7,13 +7,15 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 
+import java.util.ArrayDeque;
+
 public class Main extends Application {
     static void main() {
         launch();
     }
 
     final double GM = 4 * Math.PI * Math.PI;
-    double x = 1.0, y = 0;
+    double x = 1.0, y = 0.0;
     double vx = 0 * Math.PI, vy = 2 * Math.PI;
     double dt = 1.0 / 365.25;
 
@@ -24,6 +26,10 @@ public class Main extends Application {
     double sunY = canvasHeight / 2 - 50;
     double earthX;
     double earthY;
+
+    final int MAX_TRAIL_POINTS = 150;
+    ArrayDeque<double[]> trail = new ArrayDeque<double[]>(MAX_TRAIL_POINTS);
+
 
     double a0[] = acceleration(x, y);
 
@@ -65,14 +71,25 @@ public class Main extends Application {
                 earthX = sunX + 100 * x + 10;
                 earthY = sunY + 100 * y + 10;
 
+                trail.add(new double[]{earthX, earthY});
+
+                if (trail.size() > MAX_TRAIL_POINTS) {
+                    trail.removeFirst();
+                }
+
+                gc.setFill(Color.WHITE);
+                for(var point: trail) {
+                    gc.fillOval(point[0] + 5, point[1] + 5, 1, 1);
+                }
+
                 gc.setFill(Color.DARKCYAN);
                 gc.fillOval(earthX, earthY, 10, 10);
-                System.out.printf("x=%.4f, y=%.4f\n", earthX, earthY);
+                System.out.printf("x=%.4f, y=%.4f\n", a[0], a[1]);
+
             }
         };
 
         timer.start();
-
 
         Scene scene = new Scene(root, Color.BLACK);
         stage.setScene(scene);
