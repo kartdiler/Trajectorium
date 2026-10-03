@@ -9,16 +9,18 @@ public class Celestial {
     private double yPos;
     private double xPrev;
     private double yPrev;
-    private double radius;
+    private double canvasRadius;
+    private double realRadius;
     private Color col;
 
     Celestial(String n, double m, double x, double y, double vx, double vy,
-              double rad, Color col, List<Celestial> other, double dt) {
+              double canvRad, double realRad, Color col, List<Celestial> other, double dt, double scale) {
         this.name = n;
         this.mass = m;
         this.xPos = x;
         this.yPos = y;
-        this.radius = rad;
+        this.canvasRadius = canvRad;
+        this.realRadius = canvasRadius / scale;
         this.col = col;
 
         double[] a0 = acceleration(this, other);
@@ -87,12 +89,15 @@ public class Celestial {
         return new double[]{xPrev, yPrev};
     }
 
-    public double getRadius() {
-        return radius;
+    public double getCanvasRadius() {
+        return canvasRadius;
     }
-    public void setRadius(double newRad) {
-        radius = newRad;
+    public void setCanvasRadius(double newRad) {
+        canvasRadius = newRad;
     }
+
+    public double getRealRadius() { return realRadius; }
+    public void setRealRadius(double realRadius) { this.realRadius = realRadius; }
 
     public Color getColor() { return col; }
     public void setColor(Color col) { this.col = col; }

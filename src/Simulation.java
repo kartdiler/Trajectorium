@@ -48,7 +48,7 @@ public class Simulation {
                 double dy = posA[1] - posB[1];
                 double distance = Math.sqrt(dx * dx + dy * dy);
 
-                double collisionThreshold = (a.getRadius() + b.getRadius()) / 100.0;
+                double collisionThreshold = a.getRealRadius() + b.getRealRadius();
 
                 if (distance < collisionThreshold) {
                     Celestial smaller = a.getMass() < b.getMass() ? a : b;
@@ -56,6 +56,8 @@ public class Simulation {
                 }
             }
         }
+
+        celestials.removeAll(toRemove);
     }
 
     public List<Celestial> getBodies() {

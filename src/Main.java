@@ -7,10 +7,6 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
-
 public class Main extends Application {
     static void main() {
         launch();
@@ -33,12 +29,13 @@ public class Main extends Application {
         root.getChildren().add(canvas);
 
         Celestial Sun = new Celestial("Sun", 1, 0, 0,
-                0, 0, 20, Color.YELLOW, simulation.getBodies(), simulation.getDt());
+                0, 0, 20, 0.01, Color.YELLOW,
+                simulation.getBodies(), simulation.getDt(), scale);
         simulation.addBody(Sun);
 
         Celestial Earth = new Celestial("Earth", 3.003e-6, 1, 0,
-                0, circularVelocity(Sun.getMass(), 1), 5, Color.BLUE,
-                simulation.getBodies(), simulation.getDt());
+                0, 2, 5, 0.0001, Color.BLUE,
+                simulation.getBodies(), simulation.getDt(), scale);
         simulation.addBody(Earth);
 
         double origX = canvasWidth / 2;
@@ -53,9 +50,9 @@ public class Main extends Application {
 
                 for (Celestial cel : simulation.getBodies()) {
                     gc.setFill(cel.getColor());
-                    double x = cel.screenX(origX, scale) - cel.getRadius();
-                    double y = cel.screenY(origY, scale) - cel.getRadius();
-                    gc.fillOval(x, y, cel.getRadius() * 2, cel.getRadius() * 2);
+                    double x = cel.screenX(origX, scale) - cel.getCanvasRadius();
+                    double y = cel.screenY(origY, scale) - cel.getCanvasRadius();
+                    gc.fillOval(x, y, cel.getCanvasRadius() * 2, cel.getCanvasRadius() * 2);
                 }
 //                trail.add(new double[]{earthX, earthY});
 //
