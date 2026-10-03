@@ -14,7 +14,7 @@ public class Celestial {
     private Color col;
 
     Celestial(String n, double m, double x, double y, double vx, double vy,
-              double canvRad, double realRad, Color col, List<Celestial> other, double dt, double scale) {
+              double canvRad, Color col, List<Celestial> other, double dt, double scale) {
         this.name = n;
         this.mass = m;
         this.xPos = x;
