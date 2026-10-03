@@ -12,15 +12,8 @@ public class Celestial {
     private double radius;
     private Color col;
 
-    static double dt = 1.0 / 365.25;
-
-//    private double[] a;
-//
-//    private double vx;
-//    private double vy;
-
     Celestial(String n, double m, double x, double y, double vx, double vy,
-              double rad, Color col, List<Celestial> other) {
+              double rad, Color col, List<Celestial> other, double dt) {
         this.name = n;
         this.mass = m;
         this.xPos = x;
@@ -48,7 +41,7 @@ public class Celestial {
         return new double[]{ax, ay};
     }
 
-    void step(List<Celestial> other) {
+    void step(List<Celestial> other, double dt) {
         double[] a = acceleration(this, other);
 
         double xNext = 2 * xPos - xPrev + a[0] * dt * dt;

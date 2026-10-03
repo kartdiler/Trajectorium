@@ -16,9 +16,7 @@ public class Main extends Application {
         launch();
     }
 
-    List<Celestial> celestials = new ArrayList<Celestial>();
-
-    double dt = 1.0 / 365.25;
+    Simulation simulation = new Simulation(1.0 / 365.25);
 
     double canvasWidth = 1200;
     double canvasHeight = 800;
@@ -35,12 +33,13 @@ public class Main extends Application {
         root.getChildren().add(canvas);
 
         Celestial Sun = new Celestial("Sun", 1, 0, 0,
-                0, 0, 20, Color.YELLOW, celestials);
-        celestials.add(Sun);
+                0, 0, 20, Color.YELLOW, simulation.getBodies(), simulation.getDt());
+        simulation.addBody(Sun);
 
         Celestial Earth = new Celestial("Earth", 3.003e-6, 1, 0,
-                0, circularVelocity(Sun.getMass(), 1), 5, Color.BLUE, celestials);
-        celestials.add(Earth);
+                0, circularVelocity(Sun.getMass(), 1), 5, Color.BLUE,
+                simulation.getBodies(), simulation.getDt());
+        simulation.addBody(Earth);
 
         double origX = canvasWidth / 2;
         double origY = canvasHeight / 2;
@@ -50,11 +49,9 @@ public class Main extends Application {
             public void handle(long l) {
                 gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
-                for (Celestial cel : celestials) {
-                    cel.step(celestials);
-                }
+                simulation.step();
 
-                for (Celestial cel : celestials) {
+                for (Celestial cel : simulation.getBodies()) {
                     gc.setFill(cel.getColor());
                     double x = cel.screenX(origX, scale) - cel.getRadius();
                     double y = cel.screenY(origY, scale) - cel.getRadius();

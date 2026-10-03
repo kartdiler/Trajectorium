@@ -19,6 +19,18 @@ public class Simulation {
         celestials.remove(body);
     }
 
+    public void step() {
+        if (!isRunning) return;
+
+        double simDt = dt * simulationSpeed;
+
+        for (Celestial cel : celestials) {
+            cel.step(celestials, simDt);
+        }
+
+        handleCollisions();
+    }
+
     private void handleCollisions() {
         List<Celestial> toRemove = new ArrayList<Celestial>();
 
