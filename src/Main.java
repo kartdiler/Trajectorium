@@ -12,14 +12,11 @@ public class Main extends Application {
         launch();
     }
 
-    Simulation simulation = new Simulation(1.0 / 365.25);
+    Simulation simulation = new Simulation(1 / 365.25);
 
     double canvasWidth = 1200;
     double canvasHeight = 800;
     double scale = 100;
-
-//    final int MAX_TRAIL_POINTS = 150;
-//    ArrayDeque<double[]> trail = new ArrayDeque<double[]>(MAX_TRAIL_POINTS);
 
     @Override
     public void start(Stage stage) {
@@ -29,12 +26,12 @@ public class Main extends Application {
         root.getChildren().add(canvas);
 
         Celestial Sun = new Celestial("Sun", 1, 0, 0,
-                0, 0, 20, 0.01, Color.YELLOW,
+                0, 0, 20, Color.YELLOW,
                 simulation.getBodies(), simulation.getDt(), scale);
         simulation.addBody(Sun);
 
         Celestial Earth = new Celestial("Earth", 3.003e-6, 1, 0,
-                0, 2, 5, 0.0001, Color.BLUE,
+                0, circularVelocity(Sun.getMass(), 1), 5, Color.BLUE,
                 simulation.getBodies(), simulation.getDt(), scale);
         simulation.addBody(Earth);
 
@@ -49,22 +46,30 @@ public class Main extends Application {
                 simulation.step();
 
                 for (Celestial cel : simulation.getBodies()) {
+                    var points = cel.getTrail().getPoints();
+                    int total = points.size();
+                    int i = 0;
+
+                    gc.setFill(cel.getColor());
+                    for (double[] point : points) {
+                        double sx = origX + point[0] * scale;
+                        double sy = origY + point[1] * scale;
+
+                        double opacity = total > 1 ? (double) i / (total - 1) : 1.0;
+                        gc.setGlobalAlpha(opacity * 0.6);
+                        gc.fillOval(sx - 1, sy - 1, 2, 2);
+                        i++;
+                    }
+
+                    gc.setGlobalAlpha(1.0);
+                }
+
+                for (Celestial cel : simulation.getBodies()) {
                     gc.setFill(cel.getColor());
                     double x = cel.screenX(origX, scale) - cel.getCanvasRadius();
                     double y = cel.screenY(origY, scale) - cel.getCanvasRadius();
                     gc.fillOval(x, y, cel.getCanvasRadius() * 2, cel.getCanvasRadius() * 2);
                 }
-//                trail.add(new double[]{earthX, earthY});
-//
-//                if (trail.size() > MAX_TRAIL_POINTS) {
-//                    trail.removeFirst();
-//                }
-//
-//                gc.setFill(Color.WHITE);
-//                for(var point: trail) {
-//                    gc.fillOval(point[0] + 5, point[1] + 5, 2, 2);
-//                }
-
             }
         };
 
