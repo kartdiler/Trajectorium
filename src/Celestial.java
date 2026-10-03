@@ -13,6 +13,8 @@ public class Celestial {
     private double realRadius;
     private Color col;
 
+    private final Trail trail;
+
     Celestial(String n, double m, double x, double y, double vx, double vy,
               double canvRad, Color col, List<Celestial> other, double dt, double scale) {
         this.name = n;
@@ -22,6 +24,8 @@ public class Celestial {
         this.canvasRadius = canvRad;
         this.realRadius = canvasRadius / scale;
         this.col = col;
+
+        this.trail = new Trail(150);
 
         double[] a0 = acceleration(this, other);
         this.xPrev = x - vx * dt + a0[0] * dt * dt / 2;
@@ -53,6 +57,8 @@ public class Celestial {
         yPrev = yPos;
         xPos = xNext;
         yPos = yNext;
+
+        trail.addPoint(xPos, yPos);
     }
 
     double screenX(double origX, double scale) {
@@ -102,4 +108,7 @@ public class Celestial {
     public Color getColor() { return col; }
     public void setColor(Color col) { this.col = col; }
 
+    public Trail getTrail() {
+        return trail;
+    }
 }
