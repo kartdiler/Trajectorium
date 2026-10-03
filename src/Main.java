@@ -8,39 +8,24 @@ import javafx.stage.Stage;
 import javafx.scene.Scene;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main extends Application {
     static void main() {
         launch();
     }
 
-    final double GM = 4 * Math.PI * Math.PI;
-    double x = 1.0, y = 0.0;
-    double vx = 0 * Math.PI, vy = 2 * Math.PI;
+    List<Celestial> celestials = new ArrayList<Celestial>();
+
     double dt = 1.0 / 365.25;
 
     double canvasWidth = 1200;
     double canvasHeight = 800;
+    double scale = 100;
 
-    double sunX = canvasWidth / 2 - 20;
-    double sunY = canvasHeight / 2 - 50;
-    double earthX;
-    double earthY;
-
-    final int MAX_TRAIL_POINTS = 150;
-    ArrayDeque<double[]> trail = new ArrayDeque<double[]>(MAX_TRAIL_POINTS);
-
-
-    double a0[] = acceleration(x, y);
-
-    double xPrev = x - vx * dt + a0[0] * dt * dt / 2;
-    double yPrev = y - vy * dt + a0[1] * dt * dt / 2;
-
-    double[] acceleration(double x, double y) {
-        double r = Math.sqrt(x * x + y * y);
-        double factor = -GM / Math.pow(r, 3);
-        return new double[]{factor * x, factor * y};
-    }
+//    final int MAX_TRAIL_POINTS = 150;
+//    ArrayDeque<double[]> trail = new ArrayDeque<double[]>(MAX_TRAIL_POINTS);
 
     @Override
     public void start(Stage stage) {
@@ -49,40 +34,42 @@ public class Main extends Application {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         root.getChildren().add(canvas);
 
+        Celestial Sun = new Celestial("Sun", 1, 0, 0,
+                0, 0, 20, Color.YELLOW, celestials);
+        celestials.add(Sun);
+
+        Celestial Earth = new Celestial("Earth", 3.003e-6, 1, 0,
+                0, 2 * Math.PI, 5, Color.BLUE, celestials);
+        celestials.add(Earth);
+
+        double origX = canvasWidth / 2;
+        double origY = canvasHeight / 2;
+
         AnimationTimer timer = new AnimationTimer() {
             @Override
             public void handle(long l) {
                 gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-                gc.setFill(Color.YELLOW);
-                gc.fillOval(sunX, sunY, 40, 40);
 
-                double a[] = acceleration(x, y);
-
-                double xNext = 2 * x - xPrev + a[0] * dt * dt;
-                double yNext = 2 * y - yPrev + a[1] * dt * dt;
-
-                xPrev = x;
-                yPrev = y;
-                x = xNext;
-                y = yNext;
-
-                earthX = sunX + 100 * x + 10;
-                earthY = sunY + 100 * y + 10;
-
-                trail.add(new double[]{earthX, earthY});
-
-                if (trail.size() > MAX_TRAIL_POINTS) {
-                    trail.removeFirst();
+                for (Celestial cel : celestials) {
+                    cel.step(celestials);
                 }
 
-                gc.setFill(Color.WHITE);
-                for(var point: trail) {
-                    gc.fillOval(point[0] + 5, point[1] + 5, 1, 1);
+                for (Celestial cel : celestials) {
+                    gc.setFill(cel.getColor());
+                    double x = cel.screenX(origX, scale) - cel.getRadius();
+                    double y = cel.screenY(origY, scale) - cel.getRadius();
+                    gc.fillOval(x, y, cel.getRadius() * 2, cel.getRadius() * 2);
                 }
-
-                gc.setFill(Color.DARKCYAN);
-                gc.fillOval(earthX, earthY, 10, 10);
-                System.out.printf("x=%.4f, y=%.4f\n", a[0], a[1]);
+//                trail.add(new double[]{earthX, earthY});
+//
+//                if (trail.size() > MAX_TRAIL_POINTS) {
+//                    trail.removeFirst();
+//                }
+//
+//                gc.setFill(Color.WHITE);
+//                for(var point: trail) {
+//                    gc.fillOval(point[0] + 5, point[1] + 5, 2, 2);
+//                }
 
             }
         };
