@@ -26,17 +26,19 @@ public class Main extends Application {
         root.getChildren().add(canvas);
 
         Celestial Sun = new Celestial("Sun", 1, 0, 0,
-                0, 0, 20, Color.YELLOW,
+                1, 0, 20, Color.YELLOW,
                 simulation.getBodies(), simulation.getDt(), scale);
         simulation.addBody(Sun);
 
         Celestial Earth = new Celestial("Earth", 3.003e-6, 1, 0,
-                0, circularVelocity(Sun.getMass(), 1), 5, Color.BLUE,
+                1, circularVelocity(Sun.getMass(), 1), 5, Color.BLUE,
                 simulation.getBodies(), simulation.getDt(), scale);
         simulation.addBody(Earth);
 
         double origX = canvasWidth / 2;
         double origY = canvasHeight / 2;
+
+        Celestial trackedBody = Sun;
 
         AnimationTimer timer = new AnimationTimer() {
             @Override
@@ -44,6 +46,15 @@ public class Main extends Application {
                 gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
                 simulation.step();
+
+                double origX, origY;
+                if(trackedBody != null) {
+                    origX = canvasWidth / 2 - trackedBody.getPos()[0] * scale;
+                    origY = canvasHeight / 2 - trackedBody.getPos()[1] * scale;
+                } else {
+                    origX = canvasWidth / 2;
+                    origY = canvasHeight / 2;
+                }
 
                 for (Celestial cel : simulation.getBodies()) {
                     var points = cel.getTrail().getPoints();
