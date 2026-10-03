@@ -39,7 +39,7 @@ public class Main extends Application {
         celestials.add(Sun);
 
         Celestial Earth = new Celestial("Earth", 3.003e-6, 1, 0,
-                0, 2 * Math.PI, 5, Color.BLUE, celestials);
+                0, circularVelocity(Sun.getMass(), 1), 5, Color.BLUE, celestials);
         celestials.add(Earth);
 
         double origX = canvasWidth / 2;
@@ -82,5 +82,10 @@ public class Main extends Application {
         stage.setWidth(canvasWidth);
         stage.setHeight(canvasHeight);
         stage.show();
+    }
+
+    double circularVelocity(double parentMass, double r) {
+        double GM = 4 * Math.PI * Math.PI * parentMass;
+        return Math.sqrt(GM / r);
     }
 }
