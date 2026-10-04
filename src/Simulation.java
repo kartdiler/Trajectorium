@@ -4,7 +4,7 @@ import java.util.List;
 public class Simulation {
     private final List<Celestial> celestials = new ArrayList<Celestial>();
     private double dt;
-    private double simulationSpeed = 1.0;
+    private double simulationSpeed = 50.0;
     private boolean isRunning = true;
 
     public Simulation(double dt) {
@@ -19,13 +19,18 @@ public class Simulation {
         celestials.remove(body);
     }
 
+    private double stepAccumulator = 0;
+
     public void step() {
         if (!isRunning) return;
 
-        double simDt = dt * simulationSpeed;
+        stepAccumulator += simulationSpeed;
 
-        for (Celestial cel : celestials) {
-            cel.step(celestials, simDt);
+        while (stepAccumulator >= 1.0) {
+            for (Celestial cel : celestials) {
+                cel.step(celestials, dt);
+            }
+            stepAccumulator -= 1.0;
         }
 
         handleCollisions();
