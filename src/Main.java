@@ -18,6 +18,10 @@ public class Main extends Application {
     double canvasHeight = 800;
     double scale = 100;
 
+    Celestial trackedBody = null;
+    double currentOrigX = canvasWidth / 2;
+    double currentOrigY = canvasHeight / 2;
+
     @Override
     public void start(Stage stage) {
         Group root = new Group();
@@ -26,19 +30,63 @@ public class Main extends Application {
         root.getChildren().add(canvas);
 
         Celestial Sun = new Celestial("Sun", 1, 0, 0,
-                1, 0, 20, Color.YELLOW,
+                0, 0, 20, Color.YELLOW,
                 simulation.getBodies(), simulation.getDt(), scale);
         simulation.addBody(Sun);
 
+        Celestial Mercury = new Celestial("Mercury", 1.66e-7, 0.39, 0,
+                0, -circularVelocity(Sun.getMass(), 0.39), 2, Color.GRAY,
+                simulation.getBodies(), simulation.getDt(), scale);
+        simulation.addBody(Mercury);
+
+        Celestial Venus = new Celestial("Venus", 2.45e-6, 0.72, 0,
+                0, circularVelocity(Sun.getMass(), 0.72), 4.5, Color.LIGHTYELLOW,
+                simulation.getBodies(), simulation.getDt(), scale);
+        simulation.addBody(Venus);
+
         Celestial Earth = new Celestial("Earth", 3.003e-6, 1, 0,
-                1, circularVelocity(Sun.getMass(), 1), 5, Color.BLUE,
+                0, -circularVelocity(Sun.getMass(), 1), 0.5, Color.BLUE,
                 simulation.getBodies(), simulation.getDt(), scale);
         simulation.addBody(Earth);
 
-        double origX = canvasWidth / 2;
-        double origY = canvasHeight / 2;
+        Celestial Mars = new Celestial("Mars", 3.23e-7, 1.52, 0,
+                0, -circularVelocity(Sun.getMass(), 1.52), 4, Color.INDIANRED,
+                simulation.getBodies(), simulation.getDt(), scale);
+        simulation.addBody(Mars);
 
-        Celestial trackedBody = Sun;
+        Celestial Jupiter = new Celestial("Jupiter", 9.55e-4, 5.2, 0,
+                0, -circularVelocity(Sun.getMass(), 5.2), 2, Color.ORANGERED,
+                simulation.getBodies(), simulation.getDt(), scale);
+        simulation.addBody(Jupiter);
+
+        Celestial Moon = new Celestial("Moon", 3.69e-8, 5.31257, 0,
+                0, -circularVelocity(Jupiter.getMass(), 0.11257) - circularVelocity(Sun.getMass(), 5.31257), 0.5, Color.WHITE,
+                simulation.getBodies(), simulation.getDt(), scale);
+        simulation.addBody(Moon);
+        Moon.getTrail().setEnabled(false);
+
+        Celestial Saturn = new Celestial("Saturn", 2.86e-4, 9.54, 0,
+                0, -circularVelocity(Sun.getMass(), 9.54), 0.5, Color.NAVAJOWHITE,
+                simulation.getBodies(), simulation.getDt(), scale);
+        simulation.addBody(Saturn);
+
+        Celestial Asteroid = new Celestial("Asteroid", 1e-19, 9.74, -0.5,
+                -1, 0.7, 0.5, Color.GRAY, simulation.getBodies(), simulation.getDt(), scale);
+        simulation.addBody(Asteroid);
+//        Asteroid.getTrail().setEnabled(false);
+
+        Celestial Asteroid1 = new Celestial("Asteroid", 1e-19, 5, 1,
+                -2, 2, 0.5, Color.GRAY, simulation.getBodies(), simulation.getDt(), scale);
+        simulation.addBody(Asteroid1);
+
+//        Celestial Sun1 = new Celestial("Sun1", 10, -50, 5,
+//                2, -1, 30, Color.HOTPINK,
+//                simulation.getBodies(), simulation.getDt(), scale);
+//        simulation.addBody(Sun1);
+
+        canvas.setOnMouseClicked(event -> {
+            trackedBody = findBodyAt(event.getX(), event.getY(), currentOrigX, currentOrigY);
+        });
 
         AnimationTimer timer = new AnimationTimer() {
             @Override
@@ -46,6 +94,10 @@ public class Main extends Application {
                 gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
                 simulation.step();
+
+                if (trackedBody != null && !simulation.getBodies().contains(trackedBody)) {
+                    trackedBody = null;
+                }
 
                 double origX, origY;
                 if(trackedBody != null) {
@@ -55,6 +107,9 @@ public class Main extends Application {
                     origX = canvasWidth / 2;
                     origY = canvasHeight / 2;
                 }
+
+                currentOrigX = origX;
+                currentOrigY = origY;
 
                 for (Celestial cel : simulation.getBodies()) {
                     var points = cel.getTrail().getPoints();
@@ -97,5 +152,22 @@ public class Main extends Application {
     double circularVelocity(double parentMass, double r) {
         double GM = 4 * Math.PI * Math.PI * parentMass;
         return Math.sqrt(GM / r);
+    }
+
+    Celestial findBodyAt(double scrX, double scrY, double origX, double origY) {
+        for (Celestial cel : simulation.getBodies()) {
+            double cx = cel.screenX(origX, scale);
+            double cy = cel.screenY(origY, scale);
+
+            double dx = scrX - cx;
+            double dy = scrY - cy;
+
+            double dist = Math.sqrt(dx * dx + dy * dy);
+            double clickRadius = Math.max(cel.getCanvasRadius(), 8);
+            if (dist <= clickRadius) {
+                return cel;
+            }
+        }
+        return null;
     }
 }
