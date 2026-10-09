@@ -32,7 +32,7 @@ public class Celestial {
         this.yPrev = y - vy * dt + a0[1] * dt * dt / 2;
     }
 
-    private static double[] acceleration(Celestial target, List<Celestial> others) {
+    static double[] acceleration(Celestial target, List<Celestial> others) {
         double ax = 0;
         double ay = 0;
         for (Celestial c: others) {
