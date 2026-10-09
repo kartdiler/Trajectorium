@@ -32,7 +32,7 @@ public class Celestial {
         this.yPrev = y - vy * dt + a0[1] * dt * dt / 2;
     }
 
-    static double[] acceleration(Celestial target, List<Celestial> others) {
+    private static double[] acceleration(Celestial target, List<Celestial> others) {
         double ax = 0;
         double ay = 0;
         for (Celestial c: others) {
@@ -93,6 +93,12 @@ public class Celestial {
 
     public double[] getPrevPos() {
         return new double[]{xPrev, yPrev};
+    }
+
+    public double[] getVelocity(double dt) {
+        double vx = (xPos - xPrev) / dt;
+        double vy = (yPos - yPrev) / dt;
+        return new double[] {vx, vy};
     }
 
     public double getCanvasRadius() {
