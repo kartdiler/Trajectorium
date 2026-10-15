@@ -68,11 +68,11 @@ public class CelestialTest {
 
         Celestial a = new Celestial("A", 2.0, 0, 0, 0, 0,
                 5, Color.RED, system, DT, 100);
+        system.add(a);
 
         Celestial b = new Celestial("B", 0.5, 1, 0, 0, 0,
                 5, Color.BLUE, system, DT, 100);
-
-        Collections.addAll(system, a, b);
+        system.add(b);
 
         double[] aa = Celestial.acceleration(a, system);
         double[] ab = Celestial.acceleration(b, system);
@@ -93,5 +93,52 @@ public class CelestialTest {
         double[] pos = body.getPos();
         assertEquals(1.0 * 100 * DT, pos[0], 1e-9);
         assertEquals(0.5 * 100 * DT, pos[1], 1e-9);
+    }
+
+    @Test
+    void circularOrbitKeepsRadius() {
+        List<Celestial> system = new ArrayList<>();
+        Celestial Sun = new Celestial("Sun", 1.0, 0, 0, 0, 0,
+                20, Color.YELLOW, system, DT, 100);
+        system.add(Sun);
+
+        Celestial Earth = new Celestial("Earth", 3.003e-6, 1, 0, 0, 2 * Math.PI,
+                5, Color.BLUE, system, DT, 100);
+        system.add(Earth);
+
+        double maxDeviation = 0;
+        for (int i = 0; i < 400; i++) {
+            Earth.step(system, DT);
+            double[] p = Earth.getPos();
+            maxDeviation = Math.max(maxDeviation, Math.abs(Math.hypot(p[0], p[1]) - 1.0));
+        }
+
+        assertTrue(maxDeviation < 1e-3, "Радиус орбиты ушел на " + maxDeviation + " а.е.");
+    }
+
+    @Test
+    void angularMomentumIsConserved() {
+        List<Celestial> system = new ArrayList<Celestial>();
+
+        Celestial Sun = new Celestial("Sun", 1.0, 0, 0, 0, 0,
+                20, Color.YELLOW, system, DT, 100);
+        system.add(Sun);
+
+        Celestial Earth = new Celestial("Earth", 3.003e-6, 1, 0, 0, 2 * Math.PI,
+                5, Color.BLUE, system, DT, 100);
+        system.add(Earth);
+
+        double l0 = angularMomentum(Earth);
+        for (int i = 0; i < 1000; i++) {
+            Earth.step(system, DT);
+        }
+
+        assertEquals(l0, angularMomentum(Earth), 1e-9);
+    }
+
+    private static double angularMomentum(Celestial c) {
+        double[] p = c.getPos();
+        double[] v = c.getVelocity(DT);
+        return p[0] * v[1] - p[1] * v[0];
     }
 }
