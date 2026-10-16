@@ -48,7 +48,7 @@ public class CelestialFactory {
         double[] parentVelocity = parent.getVelocity(dt);
 
         double vRel = circularVelocity(parent.getMass(), orbitRadius);
-        double sign = counterClockwise ? 1.0 : -1.0;
+        double sign = counterClockwise ? -1.0 : 1.0;
 
         return  register(new Celestial(name, massSolar, parentPos[0] + orbitRadius, parentPos[1],
                                         parentVelocity[0], parentVelocity[1] + sign * vRel, canvasRadius,
