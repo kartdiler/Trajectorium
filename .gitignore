@@ -5,6 +5,7 @@ out/
 .kotlin
 target/
 .idea/
+logs/
 
 ### Eclipse ###
 .apt_generated

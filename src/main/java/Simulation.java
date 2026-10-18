@@ -3,7 +3,12 @@ package main.java;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class Simulation {
+    private static final Logger log = LoggerFactory.getLogger(Simulation.class);
+
     private final List<Celestial> celestials = new ArrayList<Celestial>();
     private double dt;
     private double simulationSpeed = 1.0;
@@ -15,10 +20,12 @@ public class Simulation {
 
     public void addBody(Celestial body) {
         celestials.add(body);
+        log.info("Тело добавлено: {} (масса {} Солнц)", body.getName(), body.getMass());
     }
 
     public void removeBody(Celestial body) {
         celestials.remove(body);
+        log.info("Тело удалено: {}", body.getName());
     }
 
     private double stepAccumulator = 0;
@@ -36,11 +43,6 @@ public class Simulation {
 
             stepAccumulator -= 1.0;
         }
-
-        for (Celestial cel : celestials) {
-            System.out.print(cel.getName() + " ");
-        }
-        System.out.println();
     }
 
     private void handleCollisions() {
@@ -64,7 +66,9 @@ public class Simulation {
 
                 if (distance < collisionThreshold) {
                     Celestial smaller = a.getMass() < b.getMass() ? a : b;
+                    Celestial bigger = (smaller == a) ? b : a;
                     toRemove.add(smaller);
+                    log.info("Столкновение: {} удалено при ударе о {}", smaller.getName(), bigger.getName());
                 }
             }
         }
@@ -78,18 +82,22 @@ public class Simulation {
 
     public void pause() {
         isRunning = false;
+        log.info("Симуляция приостановлена");
     }
 
     public void play() {
         isRunning = true;
+        log.info("Симуляция возобновлена");
     }
 
     public void reset() {
         celestials.clear();
+        log.info("Симуляция сброшена");
     }
 
     public void setSimulationSpeed(double speed) {
         this.simulationSpeed = speed;
+        log.debug("Скорость симуляции: {}", this.simulationSpeed);
     }
 
     public double getSimulationSpeed() {
