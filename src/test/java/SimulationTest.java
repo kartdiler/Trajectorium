@@ -1,10 +1,14 @@
 package test.java;
 
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+import ch.qos.logback.classic.Logger;
 import javafx.scene.paint.Color;
 import main.java.Celestial;
 import main.java.Simulation;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -66,5 +70,31 @@ public class SimulationTest {
         assertEquals(0, body.getPos()[0], 1e-12);
         sim.step();
         assertEquals(DT, body.getPos()[0], 1e-9);
+    }
+
+    @Test
+    void collisionIsLogged() {
+        Logger log = (Logger) LoggerFactory.getLogger(Simulation.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<ILoggingEvent>();
+        appender.start();
+        log.addAppender(appender);
+
+        try {
+            Simulation sim = new Simulation(DT);
+
+            Celestial Sun = new Celestial("Sun", 1.0, 0, 0, 0, 0,
+                    20, Color.YELLOW, sim.getBodies(), DT, 100);
+            sim.addBody(Sun);
+
+            Celestial rock = new Celestial("Rock", 1e-6, 0.1, 0, 0, 0,
+                    5, Color.GRAY, sim.getBodies(), DT, 100);
+            sim.addBody(rock);
+
+            sim.step();
+
+            assertTrue(appender.list.stream().anyMatch(e -> e.getFormattedMessage().contains("Столкновение")));
+        } finally {
+            log.detachAppender(appender);
+        }
     }
 }
