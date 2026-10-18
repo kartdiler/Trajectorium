@@ -1,4 +1,7 @@
+package test.java;
+
 import javafx.scene.paint.Color;
+import main.java.Celestial;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;

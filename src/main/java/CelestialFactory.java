@@ -1,3 +1,5 @@
+package main.java;
+
 import javafx.scene.paint.Color;
 
 public class CelestialFactory {

@@ -1,3 +1,5 @@
+package main.java;
+
 import javafx.scene.paint.Color;
 
 import java.util.List;
@@ -15,7 +17,7 @@ public class Celestial {
 
     private final Trail trail;
 
-    Celestial(String n, double m, double x, double y, double vx, double vy,
+    public Celestial(String n, double m, double x, double y, double vx, double vy,
               double canvRad, Color col, List<Celestial> other, double dt, double scale) {
         this.name = n;
         this.mass = m;
@@ -32,7 +34,7 @@ public class Celestial {
         this.yPrev = y - vy * dt + a0[1] * dt * dt / 2;
     }
 
-    static double[] acceleration(Celestial target, List<Celestial> others) {
+    public static double[] acceleration(Celestial target, List<Celestial> others) {
         double ax = 0;
         double ay = 0;
         for (Celestial c: others) {
@@ -47,7 +49,7 @@ public class Celestial {
         return new double[]{ax, ay};
     }
 
-    void step(List<Celestial> other, double dt) {
+    public void step(List<Celestial> other, double dt) {
         double[] a = acceleration(this, other);
 
         double xNext = 2 * xPos - xPrev + a[0] * dt * dt;
@@ -61,11 +63,11 @@ public class Celestial {
         trail.addPoint(xPos, yPos);
     }
 
-    double screenX(double origX, double scale) {
+    public double screenX(double origX, double scale) {
         return origX + xPos * scale;
     }
 
-    double screenY(double origY, double scale) {
+    public double screenY(double origY, double scale) {
         return origY + yPos * scale;
     }
 

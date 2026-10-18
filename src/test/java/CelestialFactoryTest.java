@@ -1,4 +1,10 @@
+package test.java;
+
 import javafx.scene.paint.Color;
+import main.java.Celestial;
+import main.java.CelestialFactory;
+import main.java.Simulation;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -9,7 +15,7 @@ public class CelestialFactoryTest {
 
     @Test
     void circularVelocityAtOneAuIsTwoPi() {
-        assertEquals(2 * Math.PI, CelestialFactory.circularVelocity(1.0, 1.0), 1e-12);
+        Assertions.assertEquals(2 * Math.PI, CelestialFactory.circularVelocity(1.0, 1.0), 1e-12);
     }
 
     @Test
@@ -27,7 +33,7 @@ public class CelestialFactoryTest {
         Celestial a = factory.createOrbiting("A", 1e-6, sun, 1.0, 5, Color.BLUE, true);
         Celestial b = factory.createOrbiting("B", 1e-6, sun, 2.0, 5, Color.RED, false);
 
-        assertEquals(3, sim.getBodies().size());
+        Assertions.assertEquals(3, sim.getBodies().size());
         assertEquals(1.0, a.getPos()[0], 1e-12);
         assertTrue(a.getVelocity(DT)[1] < 0);
         assertTrue(b.getVelocity(DT)[1] > 0);

@@ -1,3 +1,5 @@
+package main.java;
+
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.Group;
@@ -8,7 +10,7 @@ import javafx.stage.Stage;
 import javafx.scene.Scene;
 
 public class Main extends Application {
-    static void main() {
+    public static void main() {
         launch();
     }
 

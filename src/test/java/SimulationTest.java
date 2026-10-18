@@ -1,4 +1,9 @@
+package test.java;
+
 import javafx.scene.paint.Color;
+import main.java.Celestial;
+import main.java.Simulation;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -45,8 +50,8 @@ public class SimulationTest {
         sim.addBody(rock);
 
         sim.step();
-        assertEquals(1, sim.getBodies().size());
-        assertTrue(sim.getBodies().contains(Sun));
+        Assertions.assertEquals(1, sim.getBodies().size());
+        Assertions.assertTrue(sim.getBodies().contains(Sun));
     }
 
     @Test
