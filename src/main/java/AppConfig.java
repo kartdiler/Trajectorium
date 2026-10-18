@@ -61,4 +61,28 @@ public class AppConfig {
             return def;
         }
     }
+
+    public double getCanvasWidth() {
+        return canvasWidth;
+    }
+
+    public double getCanvasHeight() {
+        return canvasHeight;
+    }
+
+    public double getScale() {
+        return scale;
+    }
+
+    public double getDt() {
+        return stepDays / 365.25;
+    }
+
+    public double getSimulationSpeed() {
+        return simulationSpeed;
+    }
+
+    public int getTrailMaxPoints() {
+        return trailMaxPoints;
+    }
 }

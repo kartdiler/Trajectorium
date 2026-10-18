@@ -8,6 +8,8 @@ public class CelestialFactory {
     private static final double SOLAR_MASS_KG = 1.989e30;
     private static final double EARTH_MASS_KG = 5.972e24;
 
+    private int trailMaxPoints = 150;
+
     public enum MassUnit {
         SOLAR_MASSES(1.0),
         EARTH_MASSES(EARTH_MASS_KG / SOLAR_MASS_KG),
@@ -63,7 +65,12 @@ public class CelestialFactory {
                                       color, simulation.getBodies(), simulation.getDt(), scale));
     }
 
+    public void setTrailMaxPoints(int n) {
+        this.trailMaxPoints = n;
+    }
+
     private Celestial register(Celestial body) {
+        body.getTrail().setMaxPoints(trailMaxPoints);
         simulation.addBody(body);
         return body;
     }

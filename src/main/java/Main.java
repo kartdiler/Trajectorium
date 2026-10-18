@@ -8,33 +8,40 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 public class Main extends Application {
     public static void main() {
         launch();
     }
 
-    Simulation simulation = new Simulation(1 / 365.25);
+    private static final Logger log = LoggerFactory.getLogger(Main.class);
 
+    AppConfig config = AppConfig.load();
+    Simulation simulation = new Simulation(config.getDt());
 
-    double canvasWidth = 1200;
-    double canvasHeight = 800;
-    double scale = 100;
+    double canvasWidth = config.getCanvasWidth();
+    double canvasHeight = config.getCanvasHeight();
+    double scale = config.getScale();
 
     Celestial trackedBody = null;
     double currentOrigX = canvasWidth / 2;
     double currentOrigY = canvasHeight / 2;
 
-    CelestialFactory factory = new CelestialFactory(simulation, scale);
-
     @Override
     public void start(Stage stage) {
+        simulation.setSimulationSpeed(config.getSimulationSpeed());
+        log.info("Запуск Trajectorium: окно {}x{}, масштаб {}, шаг {} года", canvasWidth, canvasHeight,
+                scale, simulation.getDt());
+
+        CelestialFactory factory = new CelestialFactory(simulation, scale);
+        factory.setTrailMaxPoints(config.getTrailMaxPoints());
+
         Group root = new Group();
         Canvas canvas = new Canvas(canvasWidth, canvasHeight);
         GraphicsContext gc = canvas.getGraphicsContext2D();
         root.getChildren().add(canvas);
-
-        simulation.setSimulationSpeed(7);
 
         Celestial Sun = factory.createStar("Sun", 1, 0, 0, 20, Color.YELLOW);
         Celestial Mercury = factory.createOrbiting("Mercury", 1.66e-7, Sun, 0.39, 1,
@@ -58,10 +65,12 @@ public class Main extends Application {
                                             -100, -20, 2, 0.5, 20, Color.CYAN);
 
         canvas.setOnMouseClicked(event -> {
-            trackedBody = findBodyAt(event.getX(), event.getY(), currentOrigX, currentOrigY);
+            Celestial clicked = findBodyAt(event.getX(), event.getY(), currentOrigX, currentOrigY);
+            if (clicked != trackedBody) {
+                log.debug("Камера: {}", clicked == null ? "обзор сцены" : "слежение за " + clicked.getName());
+            }
+            trackedBody = clicked;
         });
-
-        trackedBody = Saturn;
 
         AnimationTimer timer = new AnimationTimer() {
             @Override
@@ -122,6 +131,8 @@ public class Main extends Application {
         stage.setWidth(canvasWidth);
         stage.setHeight(canvasHeight);
         stage.show();
+
+        stage.setOnCloseRequest(e -> log.info("Приложение закрыто"));
     }
 
     Celestial findBodyAt(double scrX, double scrY, double origX, double origY) {
