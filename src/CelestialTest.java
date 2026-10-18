@@ -2,7 +2,6 @@ import javafx.scene.paint.Color;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -136,9 +135,37 @@ public class CelestialTest {
         assertEquals(l0, angularMomentum(Earth), 1e-9);
     }
 
+    @Test
+    void energyDoesNotDrift() {
+        List<Celestial> system = new ArrayList<Celestial>();
+        Celestial Sun = new Celestial("Sun", 1.0, 0, 0, 0, 0,
+                20, Color.YELLOW, system, DT, 100);
+        system.add(Sun);
+
+        Celestial Earth = new Celestial("Earth", 3.003e-6, 1, 0, 0, 2 * Math.PI,
+                5, Color.BLUE, system, DT, 100);
+        system.add(Earth);
+
+        double e0 = energy(Earth);
+        double maxRel = 0;
+        for (int i = 0; i < 3650; i++) {
+            Earth.step(system, DT);
+            maxRel = Math.max(maxRel, Math.abs(energy(Earth) - e0) / Math.abs(e0));
+        }
+
+        assertTrue(maxRel < 1e-3, "Энергия ушла на " + maxRel);
+    }
+
     private static double angularMomentum(Celestial c) {
         double[] p = c.getPos();
         double[] v = c.getVelocity(DT);
         return p[0] * v[1] - p[1] * v[0];
+    }
+
+    private static double energy(Celestial c) {
+        double[] p = c.getPos();
+        double[] v = c.getVelocity(DT);
+        double GM = 4 * Math.PI * Math.PI;
+        return 0.5 * (v[0] * v[0] + v[1] * v[1]) - GM / Math.hypot(p[0], p[1]);
     }
 }
