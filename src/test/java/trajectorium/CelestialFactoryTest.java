@@ -1,9 +1,6 @@
-package test.java;
+package trajectorium;
 
 import javafx.scene.paint.Color;
-import main.java.Celestial;
-import main.java.CelestialFactory;
-import main.java.Simulation;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

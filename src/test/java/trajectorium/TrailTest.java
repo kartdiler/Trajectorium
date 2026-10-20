@@ -1,6 +1,5 @@
-package test.java;
+package trajectorium;
 
-import main.java.Trail;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

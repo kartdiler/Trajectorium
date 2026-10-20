@@ -1,4 +1,4 @@
-package main.java;
+package trajectorium;
 
 public class LoggingSetup {
 }

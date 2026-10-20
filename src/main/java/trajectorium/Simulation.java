@@ -1,4 +1,4 @@
-package main.java;
+package trajectorium;
 
 import java.util.ArrayList;
 import java.util.List;

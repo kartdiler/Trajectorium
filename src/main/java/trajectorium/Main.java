@@ -1,4 +1,4 @@
-package main.java;
+package trajectorium;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;

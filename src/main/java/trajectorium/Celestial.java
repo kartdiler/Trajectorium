@@ -1,4 +1,4 @@
-package main.java;
+package trajectorium;
 
 import javafx.scene.paint.Color;
 

@@ -1,11 +1,9 @@
-package test.java;
+package trajectorium;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import ch.qos.logback.classic.Logger;
 import javafx.scene.paint.Color;
-import main.java.Celestial;
-import main.java.Simulation;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;

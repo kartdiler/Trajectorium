@@ -1,4 +1,5 @@
-import main.java.AppConfig;
+package trajectorium;
+
 import org.junit.jupiter.api.Test;
 
 import java.util.Properties;

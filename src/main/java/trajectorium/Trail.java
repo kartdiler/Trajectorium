@@ -1,4 +1,4 @@
-package main.java;
+package trajectorium;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
