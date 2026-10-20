@@ -34,7 +34,7 @@ public class Celestial {
         this.yPrev = y - vy * dt + a0[1] * dt * dt / 2;
     }
 
-    public static double[] acceleration(Celestial target, List<Celestial> others) {
+    static double[] acceleration(Celestial target, List<Celestial> others) {
         double ax = 0;
         double ay = 0;
         for (Celestial c: others) {
@@ -49,7 +49,7 @@ public class Celestial {
         return new double[]{ax, ay};
     }
 
-    public void step(List<Celestial> other, double dt) {
+    void step(List<Celestial> other, double dt) {
         double[] a = acceleration(this, other);
 
         double xNext = 2 * xPos - xPrev + a[0] * dt * dt;
