@@ -14,6 +14,8 @@ public class Simulation {
     private double simulationSpeed = 1.0;
     private boolean isRunning = true;
 
+    private Integrator integrator = new VerletIntegrator();
+
     public Simulation(double dt) {
         this.dt = dt;
     }
@@ -36,9 +38,7 @@ public class Simulation {
         stepAccumulator += simulationSpeed;
 
         while (stepAccumulator >= 1.0) {
-            for (Celestial cel : celestials) {
-                cel.step(celestials, dt);
-            }
+            integrator.step(celestials, dt);
             handleCollisions();
 
             stepAccumulator -= 1.0;
@@ -74,6 +74,15 @@ public class Simulation {
         }
 
         celestials.removeAll(toRemove);
+    }
+
+    public void setIntegrator(Integrator integrator) {
+        this.integrator = integrator;
+        log.info("Интегратор: {}", integrator.getName());
+    }
+
+    public Integrator getIntegrator() {
+        return integrator;
     }
 
     public List<Celestial> getBodies() {
