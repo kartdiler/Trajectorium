@@ -63,6 +63,14 @@ public class Celestial {
         trail.addPoint(xPos, yPos);
     }
 
+    void setState(double x, double y, double xPrev, double yPrev) {
+        this.xPos = x;
+        this.yPos = y;
+        this.xPrev = xPrev;
+        this.yPrev = yPrev;
+        trail.addPoint(xPos, yPos);
+    }
+
     public double screenX(double origX, double scale) {
         return origX + xPos * scale;
     }
