@@ -11,6 +11,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CelestialTest {
     private static final double DT = 1.0 / 365.25;
+    private static final Integrator VERLET = new VerletIntegrator();
+    private static final double GM_SUN = 4 * Math.PI * Math.PI;
 
     @Test
     void initialVelocityMatchesConstructorInput() {
@@ -84,90 +86,102 @@ public class CelestialTest {
 
     @Test
     void freeBodyMovesInStraightLine() {
-        Celestial body = new Celestial("Body", 1.0, 0, 0, 1.0, 0.5,
-                5, Color.WHITE, List.of(), DT, 100);
+        List<Celestial> system = new ArrayList<Celestial>();
+        system.add(new Celestial("Body", 1.0, 0, 0, 1.0, 0.5,
+                5, Color.WHITE, system, DT, 100));
 
-        for (int i = 0; i < 100; i++) {
-            body.step(List.of(), DT);
-        }
+        run(system, 100);
 
-        double[] pos = body.getPos();
+        double[] pos = system.get(0).getPos();
         assertEquals(1.0 * 100 * DT, pos[0], 1e-9);
         assertEquals(0.5 * 100 * DT, pos[1], 1e-9);
     }
 
     @Test
     void circularOrbitKeepsRadius() {
-        List<Celestial> system = new ArrayList<>();
-        Celestial Sun = new Celestial("Sun", 1.0, 0, 0, 0, 0,
-                20, Color.YELLOW, system, DT, 100);
-        system.add(Sun);
-
-        Celestial Earth = new Celestial("Earth", 3.003e-6, 1, 0, 0, 2 * Math.PI,
-                5, Color.BLUE, system, DT, 100);
-        system.add(Earth);
+        List<Celestial> system = sunEarthSystem();
+        Celestial Sun = system.get(0);
+        Celestial Earth = system.get(1);
 
         double maxDeviation = 0;
         for (int i = 0; i < 400; i++) {
-            Earth.step(system, DT);
-            double[] p = Earth.getPos();
-            maxDeviation = Math.max(maxDeviation, Math.abs(Math.hypot(p[0], p[1]) - 1.0));
+            VERLET.step(system, DT);
+            maxDeviation = Math.max(maxDeviation, Math.abs(distance(Sun, Earth) - 1.0));
         }
 
         assertTrue(maxDeviation < 1e-3, "Радиус орбиты ушел на " + maxDeviation + " а.е.");
     }
 
     @Test
-    void angularMomentumIsConserved() {
-        List<Celestial> system = new ArrayList<Celestial>();
+    void totalAngularMomentumIsConserved() {
+        List<Celestial> system = sunEarthSystem();
 
-        Celestial Sun = new Celestial("Sun", 1.0, 0, 0, 0, 0,
-                20, Color.YELLOW, system, DT, 100);
-        system.add(Sun);
+        double l0 = totalAngularMomentum(system);
+        run(system, 1000);
 
-        Celestial Earth = new Celestial("Earth", 3.003e-6, 1, 0, 0, 2 * Math.PI,
-                5, Color.BLUE, system, DT, 100);
-        system.add(Earth);
-
-        double l0 = angularMomentum(Earth);
-        for (int i = 0; i < 1000; i++) {
-            Earth.step(system, DT);
-        }
-
-        assertEquals(l0, angularMomentum(Earth), 1e-9);
+        assertEquals(l0, totalAngularMomentum(system), 1e-9);
     }
 
     @Test
     void energyDoesNotDrift() {
-        List<Celestial> system = new ArrayList<Celestial>();
-        Celestial Sun = new Celestial("Sun", 1.0, 0, 0, 0, 0,
-                20, Color.YELLOW, system, DT, 100);
-        system.add(Sun);
+        List<Celestial> system = sunEarthSystem();
 
-        Celestial Earth = new Celestial("Earth", 3.003e-6, 1, 0, 0, 2 * Math.PI,
-                5, Color.BLUE, system, DT, 100);
-        system.add(Earth);
-
-        double e0 = energy(Earth);
+        double e0 = totalEnergy(system);
         double maxRel = 0;
         for (int i = 0; i < 3650; i++) {
-            Earth.step(system, DT);
-            maxRel = Math.max(maxRel, Math.abs(energy(Earth) - e0) / Math.abs(e0));
+            VERLET.step(system, DT);
+            maxRel = Math.max(maxRel, Math.abs(totalEnergy(system) - e0) / Math.abs(e0));
         }
 
         assertTrue(maxRel < 1e-3, "Энергия ушла на " + maxRel);
     }
 
-    private static double angularMomentum(Celestial c) {
-        double[] p = c.getPos();
-        double[] v = c.getVelocity(DT);
-        return p[0] * v[1] - p[1] * v[0];
+    private static void run(List<Celestial> system, int steps) {
+        for (int i = 0; i < steps; i++) {
+            VERLET.step(system, DT);
+        }
     }
 
-    static double energy(Celestial c) {
-        double[] p = c.getPos();
-        double[] v = c.getVelocity(DT);
-        double GM = 4 * Math.PI * Math.PI;
-        return 0.5 * (v[0] * v[0] + v[1] * v[1]) - GM / Math.hypot(p[0], p[1]);
+    private static List<Celestial> sunEarthSystem() {
+        List<Celestial> system = new ArrayList<Celestial>();
+        system.add(new Celestial("Sun", 1.0, 0, 0, 0, 0, 20, Color.YELLOW, system, DT, 100));
+        system.add(new Celestial("Earth", 3.003e-6, 1, 0, 0, 2 * Math.PI, 5, Color.BLUE, system, DT, 100));
+
+        return system;
+    }
+
+    private static double distance(Celestial a, Celestial b) {
+        double[] pa = a.getPos();
+        double[] pb = b.getPos();
+
+        return Math.hypot(pa[0] - pb[0], pa[1] - pb[1]);
+    }
+
+    private static double totalAngularMomentum(List<Celestial> bodies) {
+        double l = 0;
+
+        for (Celestial c : bodies) {
+            double[] p = c.getPos();
+            double[] v = c.getVelocity(DT);
+            l += c.getMass() * (p[0] * v[1] - p[1] * v[0]);
+        }
+
+        return l;
+    }
+
+    private static double totalEnergy(List<Celestial> bodies) {
+        double kinetic = 0;
+        double potential = 0;
+
+        for (int i = 0; i < bodies.size(); i++) {
+            Celestial c = bodies.get(i);
+            double[] v = c.getVelocity(DT);
+            kinetic += 0.5 * c.getMass() * (v[0] * v[0] + v[1] * v[1]);
+            for (int j = i + 1; j < bodies.size(); j++) {
+                potential -= GM_SUN * c.getMass() * bodies.get(j).getMass() / distance(c, bodies.get(j));
+            }
+        }
+
+        return kinetic + potential;
     }
 }

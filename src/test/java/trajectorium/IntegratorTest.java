@@ -8,7 +8,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static trajectorium.CelestialTest.energy;
 
 public class IntegratorTest {
     private static final double DT = 1.0 / 365.25;
@@ -65,5 +64,12 @@ public class IntegratorTest {
         }
 
         return new double[] {px, py};
+    }
+
+    private static double energy(Celestial c) {
+        double[] p = c.getPos();
+        double[] v = c.getVelocity(DT);
+        double GM = 4 * Math.PI * Math.PI;
+        return 0.5 * (v[0] * v[0] + v[1] * v[1]) - GM / Math.hypot(p[0], p[1]);
     }
 }

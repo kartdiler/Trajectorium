@@ -49,20 +49,6 @@ public class Celestial {
         return new double[]{ax, ay};
     }
 
-    void step(List<Celestial> other, double dt) {
-        double[] a = acceleration(this, other);
-
-        double xNext = 2 * xPos - xPrev + a[0] * dt * dt;
-        double yNext = 2 * yPos - yPrev + a[1] * dt * dt;
-
-        xPrev = xPos;
-        yPrev = yPos;
-        xPos = xNext;
-        yPos = yNext;
-
-        trail.addPoint(xPos, yPos);
-    }
-
     void setState(double x, double y, double xPrev, double yPrev) {
         this.xPos = x;
         this.yPos = y;
