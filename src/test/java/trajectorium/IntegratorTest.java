@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static trajectorium.CelestialTest.energy;
 
 public class IntegratorTest {
     private static final double DT = 1.0 / 365.25;
@@ -27,6 +29,29 @@ public class IntegratorTest {
 
         assertEquals(p0[0], p1[0], 1e-9);
         assertEquals(p0[1], p1[1], 1e-9);
+    }
+
+    @Test
+    void verletDriftsLessThanEulerOnCircularOrbit() {
+        double verletDrift = energyDrift(new VerletIntegrator());
+        double eulerDrift = energyDrift(new EulerIntegrator());
+        assertTrue(eulerDrift > 10 * verletDrift, "Euler=" + eulerDrift + " Verlet=" + verletDrift);
+    }
+
+    private static double energyDrift(Integrator integrator) {
+        List<Celestial> system = new ArrayList<Celestial>();
+        system.add(new Celestial("Sun", 1.0, 0, 0, 0, 0, 20, Color.YELLOW, system, DT, 100));
+        system.add(new Celestial("Earth", 3.003e-6, 1, 0, 0, 2 * Math.PI, 5, Color.BLUE, system, DT, 100));
+        Celestial Earth = system.get(1);
+
+        double e0 = energy(Earth);
+        double maxRel = 0;
+        for (int i = 0; i < 365; i++) {
+            integrator.step(system, DT);
+            maxRel = Math.max(maxRel, Math.abs(energy(Earth) - e0) / Math.abs(e0));
+        }
+
+        return maxRel;
     }
 
     private static double[] momentum(List<Celestial> bodies) {

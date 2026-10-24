@@ -164,7 +164,7 @@ public class CelestialTest {
         return p[0] * v[1] - p[1] * v[0];
     }
 
-    private static double energy(Celestial c) {
+    static double energy(Celestial c) {
         double[] p = c.getPos();
         double[] v = c.getVelocity(DT);
         double GM = 4 * Math.PI * Math.PI;

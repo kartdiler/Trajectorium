@@ -95,4 +95,11 @@ public class SimulationTest {
             log.detachAppender(appender);
         }
     }
+
+    @Test
+    void integratorCanBeSwapped() {
+        Simulation sim = new Simulation(DT);
+        sim.setIntegrator(new EulerIntegrator());
+        assertEquals("Euler", sim.getIntegrator().getName());
+    }
 }
