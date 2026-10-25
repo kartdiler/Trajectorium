@@ -27,11 +27,13 @@ public class Simulation {
     public void addBody(Celestial body) {
         celestials.add(body);
         log.info("Тело добавлено: {} (масса {} Солнц)", body.getName(), body.getMass());
+        notifyListeners(l -> l.onBodyAdded(body));
     }
 
     public void removeBody(Celestial body) {
         celestials.remove(body);
         log.info("Тело удалено: {}", body.getName());
+        notifyListeners(l -> l.onBodyRemoved(body));
     }
 
     private double stepAccumulator = 0;
@@ -40,17 +42,23 @@ public class Simulation {
         if (!isRunning) return;
 
         stepAccumulator += simulationSpeed;
-
+        boolean stepped = false;
         while (stepAccumulator >= 1.0) {
             integrator.step(celestials, dt);
+            time += dt;
             handleCollisions();
-
             stepAccumulator -= 1.0;
+            stepped = true;
+        }
+
+        if (stepped) {
+            notifyListeners(l -> l.onStep(this));
         }
     }
 
     private void handleCollisions() {
         List<Celestial> toRemove = new ArrayList<Celestial>();
+        List<Celestial[]> hits = new ArrayList<Celestial[]>();
 
         for (int i = 0; i < celestials.size(); i++) {
             for (int j = i + 1; j < celestials.size(); j++) {
@@ -61,10 +69,7 @@ public class Simulation {
 
                 double[] posA = a.getPos();
                 double[] posB = b.getPos();
-
-                double dx = posA[0] - posB[0];
-                double dy = posA[1] - posB[1];
-                double distance = Math.sqrt(dx * dx + dy * dy);
+                double distance = Math.hypot(posA[0] - posB[0], posA[1] - posB[1]);
 
                 double collisionThreshold = a.getRealRadius() + b.getRealRadius();
 
@@ -72,12 +77,18 @@ public class Simulation {
                     Celestial smaller = a.getMass() < b.getMass() ? a : b;
                     Celestial bigger = (smaller == a) ? b : a;
                     toRemove.add(smaller);
-                    log.info("Столкновение: {} удалено при ударе о {}", smaller.getName(), bigger.getName());
+                    hits.add(new Celestial[]{smaller, bigger});
                 }
             }
         }
 
         celestials.removeAll(toRemove);
+
+        for(Celestial[] hit : hits) {
+            log.info("Столкновение: {} удалено при ударе о {}", hit[0].getName(), hit[1].getName());
+            notifyListeners(l -> l.onCollision(hit[0], hit[1]));
+            notifyListeners(l -> l.onBodyRemoved(hit[0]));
+        }
     }
 
     public void setIntegrator(Integrator integrator) {
@@ -96,16 +107,20 @@ public class Simulation {
     public void pause() {
         isRunning = false;
         log.info("Симуляция приостановлена");
+        notifyListeners(l -> l.onRunningChanged(false));
     }
 
     public void play() {
         isRunning = true;
         log.info("Симуляция возобновлена");
+        notifyListeners(l -> l.onRunningChanged(true));
     }
 
     public void reset() {
         celestials.clear();
+        time = 0;
         log.info("Симуляция сброшена");
+        notifyListeners(l -> l.onReset());
     }
 
     public void setSimulationSpeed(double speed) {
