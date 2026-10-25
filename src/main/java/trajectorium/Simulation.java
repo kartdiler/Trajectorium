@@ -15,7 +15,7 @@ public class Simulation {
     private final List<Celestial> celestials = new ArrayList<Celestial>();
     private double dt;
     private double simulationSpeed = 1.0;
-    private boolean isRunning = true;
+    private boolean running = true;
     private double time = 0;
 
     private Integrator integrator = new VerletIntegrator();
@@ -39,7 +39,7 @@ public class Simulation {
     private double stepAccumulator = 0;
 
     public void step() {
-        if (!isRunning) return;
+        if (!running) return;
 
         stepAccumulator += simulationSpeed;
         boolean stepped = false;
@@ -105,15 +105,19 @@ public class Simulation {
     }
 
     public void pause() {
-        isRunning = false;
+        running = false;
         log.info("Симуляция приостановлена");
         notifyListeners(l -> l.onRunningChanged(false));
     }
 
     public void play() {
-        isRunning = true;
+        running = true;
         log.info("Симуляция возобновлена");
         notifyListeners(l -> l.onRunningChanged(true));
+    }
+
+    public boolean isRunning() {
+        return running;
     }
 
     public void reset() {
