@@ -2,6 +2,8 @@ package trajectorium;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,10 +11,12 @@ import org.slf4j.LoggerFactory;
 public class Simulation {
     private static final Logger log = LoggerFactory.getLogger(Simulation.class);
 
+    private final List<SimulationListener> listeners = new CopyOnWriteArrayList<SimulationListener>();
     private final List<Celestial> celestials = new ArrayList<Celestial>();
     private double dt;
     private double simulationSpeed = 1.0;
     private boolean isRunning = true;
+    private double time = 0;
 
     private Integrator integrator = new VerletIntegrator();
 
@@ -115,5 +119,27 @@ public class Simulation {
 
     public double getDt() {
         return dt;
+    }
+
+    public void addListener(SimulationListener l) {
+        listeners.add(l);
+    }
+
+    public void removeListener(SimulationListener l) {
+        listeners.remove(l);
+    }
+
+    public double getTime() {
+        return time;
+    }
+
+    public void notifyListeners(Consumer<SimulationListener> event) {
+        for (SimulationListener l : listeners) {
+            try {
+                event.accept(l);
+            } catch (RuntimeException ex) {
+                log.error("Ошибка в слушателе {}", l, ex);
+            }
+        }
     }
 }
