@@ -5,6 +5,7 @@ import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
@@ -20,6 +21,7 @@ public class Main extends Application {
 
     AppConfig config = AppConfig.load();
     Simulation simulation = new Simulation(config.getDt());
+    CommandHistory history = new CommandHistory(50);
 
     double canvasWidth = config.getCanvasWidth();
     double canvasHeight = config.getCanvasHeight();
@@ -139,6 +141,16 @@ public class Main extends Application {
         stage.show();
 
         stage.setOnCloseRequest(e -> log.info("Приложение закрыто"));
+
+        scene.setOnKeyPressed(e -> {
+            if (e.isControlDown() && e.getCode() == KeyCode.Z) {
+                history.undo();
+            } else if (e.isControlDown() && e.getCode() == KeyCode.Y) {
+                history.redo();
+            } else if (e.getCode() == KeyCode.SPACE) {
+                history.execute(new SetRunningCommand(simulation, !simulation.isRunning()));
+            }
+        });
     }
 
     Celestial findBodyAt(double scrX, double scrY, double origX, double origY) {
