@@ -3,7 +3,7 @@ package trajectorium;
 import javafx.scene.paint.Color;
 
 public class CelestialFactory {
-    public static final double GM_SUN = 4 * Math.pow(Math.PI, 2);
+    public static final double G = 4 * Math.pow(Math.PI, 2);
 
     private static final double SOLAR_MASS_KG = 1.989e30;
     private static final double EARTH_MASS_KG = 5.972e24;
@@ -35,7 +35,7 @@ public class CelestialFactory {
     }
 
     public static double circularVelocity(double centralMass, double r) {
-        return Math.sqrt(GM_SUN * centralMass / r);
+        return Math.sqrt(G * centralMass / r);
     }
 
     public Celestial createStar(String name, double massSolar, double x, double y,

@@ -44,7 +44,7 @@ public class EnergyMonitor implements SimulationListener {
                 double[] pb = b.getPos();
 
                 double r = Math.hypot(pa[0] - pb[0], pa[1] - pb[1]);
-                potential -= CelestialFactory.GM_SUN * a.getMass() * b.getMass();
+                potential -= CelestialFactory.G * a.getMass() * b.getMass();
             }
         }
 

@@ -42,7 +42,7 @@ public class Celestial {
             double dx = c.getPos()[0] - target.getPos()[0];
             double dy = c.getPos()[1] - target.getPos()[1];
             double r = Math.sqrt(dx * dx + dy * dy);
-            double factor = 4 * Math.PI * Math.PI * c.mass / Math.pow(r, 3);
+            double factor = CelestialFactory.G * c.mass / Math.pow(r, 3);
             ax += factor * dx;
             ay += factor * dy;
         }

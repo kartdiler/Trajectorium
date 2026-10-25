@@ -43,6 +43,17 @@ public class Main extends Application {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         root.getChildren().add(canvas);
 
+        simulation.addListener(new SimulationListener() {
+            @Override
+            public void onBodyRemoved(Celestial body) {
+                if (body == trackedBody) {
+                    log.info("Отслеживаемое тело {} удалено, камера возвращена в центр", body.getName());
+                    trackedBody = null;
+                }
+            }
+        });
+        simulation.addListener(new EnergyMonitor(1000));
+
         Celestial Sun = factory.createStar("Sun", 1, 0, 0, 20, Color.YELLOW);
         Celestial Mercury = factory.createOrbiting("Mercury", 1.66e-7, Sun, 0.39, 1,
                                                     Color.GRAY, true);
@@ -76,12 +87,7 @@ public class Main extends Application {
             @Override
             public void handle(long l) {
                 gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-
                 simulation.step();
-
-                if (trackedBody != null && !simulation.getBodies().contains(trackedBody)) {
-                    trackedBody = null;
-                }
 
                 double origX, origY;
                 if(trackedBody != null) {
