@@ -39,4 +39,70 @@ public class CommandTest {
         history.undo();
         assertTrue(sim.getBodies().contains(sun));
     }
+
+    @Test
+    void pauseCommandIsUndoable() {
+        Simulation sim = new Simulation(DT);
+        CommandHistory history = new CommandHistory(10);
+
+        history.execute(new SetRunningCommand(sim, false));
+        assertFalse(sim.isRunning());
+
+        history.undo();
+        assertTrue(sim.isRunning());
+    }
+
+    @Test
+    void speedCommandRestoresPreviousSpeed() {
+        Simulation sim = new Simulation(DT);
+        CommandHistory history = new CommandHistory(10);
+        double before = sim.getSimulationSpeed();
+
+        history.execute(new SetSpeedCommand(sim, 5));
+        assertEquals(5, sim.getSimulationSpeed(), 1e-12);
+
+        history.undo();
+        assertEquals(before, sim.getSimulationSpeed(), 1e-12);
+    }
+
+    @Test
+    void newCommandClearRedoStack() {
+        Simulation sim = new Simulation(DT);
+        CommandHistory history = new CommandHistory(10);
+
+        history.execute(new SetSpeedCommand(sim, 2));
+        history.undo();
+        assertTrue(history.canRedo());
+
+        history.execute(new SetSpeedCommand(sim, 3));
+        assertFalse(history.canRedo());
+    }
+
+    @Test
+    void resetCannotBeUndoneAndClearsHistory() {
+        Simulation sim = new Simulation(DT);
+        CelestialFactory factory = new CelestialFactory(sim, 100);
+        CommandHistory history = new CommandHistory(10);
+
+        history.execute(new AddBodyCommand(sim, () -> factory.createStar("Sun",
+                                        1, 0, 0, 20, Color.YELLOW)));
+        history.execute(new ResetCommand(sim));
+
+        assertTrue(sim.getBodies().isEmpty());
+        assertFalse(history.canUndo());
+    }
+
+    @Test
+    void historyRespectsLimit() {
+        Simulation sim = new Simulation(DT);
+        CommandHistory history = new CommandHistory(2);
+
+        history.execute(new SetSpeedCommand(sim, 2));
+        history.execute(new SetSpeedCommand(sim, 3));
+        history.execute(new SetSpeedCommand(sim, 4));
+
+        assertTrue(history.undo());
+        assertTrue(history.undo());
+        assertFalse(history.undo());
+    }
 }
