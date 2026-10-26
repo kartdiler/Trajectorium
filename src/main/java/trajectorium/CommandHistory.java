@@ -18,8 +18,8 @@ public class CommandHistory {
     }
 
     public void execute(Command c) {
-        c.execute();
         log.info("Команда: {}", c.getName());
+        c.execute();
         if (c.isUndoable()) {
             undoStack.push(c);
             if (undoStack.size() > limit) {
@@ -38,9 +38,9 @@ public class CommandHistory {
         }
 
         Command c = undoStack.pop();
+        log.info("Отмена: {}", c.getName());
         c.undo();
         redoStack.push(c);
-        log.info("Отмена: {}", c.getName());
         return true;
     }
 
@@ -50,9 +50,9 @@ public class CommandHistory {
         }
 
         Command c = redoStack.pop();
+        log.info("Повтор: {}", c.getName());
         c.execute();
         undoStack.push(c);
-        log.info("Повтор: {}", c.getName());
         return true;
     }
 
