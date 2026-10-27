@@ -8,4 +8,5 @@ public interface SimulationListener {
     default void onRunningChanged(boolean running) {}
     default void onReset() {}
     default void onSpeedChanged(double speed) {}
+    default void onIntegratorChanged(Integrator integrator) {}
 }

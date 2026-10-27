@@ -94,6 +94,7 @@ public class Simulation {
     public void setIntegrator(Integrator integrator) {
         this.integrator = integrator;
         log.info("Интегратор: {}", integrator.getName());
+        notifyListeners(l -> l.onIntegratorChanged(integrator));
     }
 
     public Integrator getIntegrator() {
