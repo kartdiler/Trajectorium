@@ -13,6 +13,8 @@ public class CommandHistory {
     private final Deque<Command> redoStack = new ArrayDeque<Command>();
     private final int limit;
 
+    private Runnable onChange = () -> {};
+
     public CommandHistory(int limit) {
         this.limit = limit;
     }
@@ -30,6 +32,7 @@ public class CommandHistory {
             undoStack.clear();
             redoStack.clear();
         }
+        onChange.run();
     }
 
     public boolean undo() {
@@ -41,6 +44,7 @@ public class CommandHistory {
         log.info("Отмена: {}", c.getName());
         c.undo();
         redoStack.push(c);
+        onChange.run();
         return true;
     }
 
@@ -53,6 +57,7 @@ public class CommandHistory {
         log.info("Повтор: {}", c.getName());
         c.execute();
         undoStack.push(c);
+        onChange.run();
         return true;
     }
 
@@ -62,5 +67,9 @@ public class CommandHistory {
 
     public boolean canRedo() {
         return !redoStack.isEmpty();
+    }
+
+    public void setOnChange(Runnable onChange) {
+        this.onChange = onChange;
     }
 }
