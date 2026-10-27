@@ -6,6 +6,8 @@ import trajectorium.Celestial;
 import trajectorium.CelestialFactory;
 import trajectorium.Simulation;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class CommandTest {
@@ -107,5 +109,21 @@ public class CommandTest {
         assertTrue(history.undo());
         assertTrue(history.undo());
         assertFalse(history.undo());
+    }
+
+    @Test
+    void onChangeIsCalledAfterExecuteUndoAndRedo() {
+        Simulation sim = new Simulation(DT);
+        CommandHistory history = new CommandHistory(10);
+        AtomicInteger calls = new AtomicInteger();
+        history.setOnChange(calls::incrementAndGet);
+
+        history.execute(new SetSpeedCommand(sim, 2));
+        history.undo();
+        history.redo();
+        history.undo();
+        history.undo();
+
+        assertEquals(4, calls.get());
     }
 }

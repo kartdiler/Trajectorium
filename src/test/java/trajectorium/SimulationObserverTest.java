@@ -140,4 +140,22 @@ public class SimulationObserverTest {
         sim.reset();
         assertTrue(monitor.getHistory().isEmpty());
     }
+
+    @Test
+    void speedChangeIsReportedOnlyWhenValueChanges() {
+        Simulation sim = new Simulation(DT);
+        List<Double> speeds = new ArrayList<Double>();
+        sim.addListener(new SimulationListener() {
+            @Override
+            public void onSpeedChanged(double speed) {
+                speeds.add(speed);
+            }
+        });
+
+        sim.setSimulationSpeed(2);
+        sim.setSimulationSpeed(2);
+        sim.setSimulationSpeed(500);
+
+        assertEquals(List.of(2.0, 100.0), speeds);
+    }
 }
