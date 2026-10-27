@@ -128,8 +128,12 @@ public class Simulation {
     }
 
     public void setSimulationSpeed(double speed) {
-        this.simulationSpeed = speed;
-        log.debug("Скорость симуляции: {}", this.simulationSpeed);
+        double clamped = Math.max(0, Math.min(speed, 100));
+        if (clamped != this.simulationSpeed) {
+            this.simulationSpeed = speed;
+            log.debug("Скорость симуляции: {}", this.simulationSpeed);
+            notifyListeners(l -> l.onSpeedChanged(clamped));
+        }
     }
 
     public double getSimulationSpeed() {

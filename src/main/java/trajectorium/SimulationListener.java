@@ -7,4 +7,5 @@ public interface SimulationListener {
     default void onCollision(Celestial removed, Celestial stayed) {}
     default void onRunningChanged(boolean running) {}
     default void onReset() {}
+    default void onSpeedChanged(double speed) {}
 }
