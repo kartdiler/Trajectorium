@@ -1,4 +1,7 @@
-package trajectorium;
+package trajectorium.command;
+
+import trajectorium.Celestial;
+import trajectorium.Simulation;
 
 import java.util.function.Supplier;
 

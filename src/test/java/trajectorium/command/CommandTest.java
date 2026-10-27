@@ -1,7 +1,10 @@
-package trajectorium;
+package trajectorium.command;
 
 import javafx.scene.paint.Color;
 import org.junit.jupiter.api.Test;
+import trajectorium.Celestial;
+import trajectorium.CelestialFactory;
+import trajectorium.Simulation;
 
 import static org.junit.jupiter.api.Assertions.*;
 

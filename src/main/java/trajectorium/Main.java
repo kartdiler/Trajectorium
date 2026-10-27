@@ -2,7 +2,6 @@ package trajectorium;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
-import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyCode;
@@ -12,6 +11,7 @@ import javafx.stage.Stage;
 import javafx.scene.Scene;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import trajectorium.command.*;
 import trajectorium.ui.ControlPanel;
 
 public class Main extends Application {

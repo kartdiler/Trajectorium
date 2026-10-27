@@ -1,4 +1,7 @@
-package trajectorium;
+package trajectorium.command;
+
+import trajectorium.Celestial;
+import trajectorium.Simulation;
 
 public class RemoveBodyCommand implements Command {
     private final Simulation sim;

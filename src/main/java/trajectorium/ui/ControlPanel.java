@@ -7,6 +7,10 @@ import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import trajectorium.*;
+import trajectorium.command.CommandHistory;
+import trajectorium.command.ResetCommand;
+import trajectorium.command.SetRunningCommand;
+import trajectorium.command.SetSpeedCommand;
 
 import java.util.List;
 

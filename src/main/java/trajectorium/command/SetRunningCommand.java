@@ -1,4 +1,6 @@
-package trajectorium;
+package trajectorium.command;
+
+import trajectorium.Simulation;
 
 public class SetRunningCommand implements Command {
     private final Simulation sim;

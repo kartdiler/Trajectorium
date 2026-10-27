@@ -1,4 +1,4 @@
-package trajectorium;
+package trajectorium.command;
 
 public interface Command {
     void execute();

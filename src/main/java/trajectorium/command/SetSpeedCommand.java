@@ -1,4 +1,6 @@
-package trajectorium;
+package trajectorium.command;
+
+import trajectorium.Simulation;
 
 public class SetSpeedCommand implements Command {
     private final Simulation sim;
