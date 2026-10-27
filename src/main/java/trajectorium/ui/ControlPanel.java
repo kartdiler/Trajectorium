@@ -27,6 +27,7 @@ public class ControlPanel extends VBox {
     private final Slider speedSlider = new Slider(0.1, 20, 1);
     private final Label speedLabel = new Label();
     private final Label timeLabel = new Label();
+    private final Label help = new Label();
 
     public ControlPanel(Simulation sim, CommandHistory history, Runnable onReset) {
         super(10);
@@ -37,6 +38,7 @@ public class ControlPanel extends VBox {
         setStyle("-fx-background-color: #222222; -fx-padding: 12;");
         speedLabel.setStyle(WHITE_TEXT);
         timeLabel.setStyle(WHITE_TEXT);
+        help.setStyle(WHITE_TEXT);
 
         pauseButton.setText(sim.isRunning() ? "Пауза" : "Продолжить");
         speedSlider.setValue(sim.getSimulationSpeed());
@@ -60,6 +62,8 @@ public class ControlPanel extends VBox {
                 history.execute(new SetSpeedCommand(sim, v));
             }
         });
+
+        help.setText("ЛКМ по телу: следить за ним\nПКМ: добавить тело\nПробел: пауза\nCtrl+Z / Ctrl+Y: отмена / повтор");
 
         history.setOnChange(this::refreshHistoryButtons);
 
@@ -93,7 +97,7 @@ public class ControlPanel extends VBox {
         getChildren().addAll(
                 new HBox(8, pauseButton, resetButton),
                 new HBox(8, undoButton, redoButton),
-                speedLabel, speedSlider, timeLabel);
+                speedLabel, speedSlider, timeLabel, help);
     }
 
     private void showSpeed(double v) {

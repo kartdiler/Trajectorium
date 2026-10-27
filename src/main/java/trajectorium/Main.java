@@ -5,14 +5,17 @@ import javafx.application.Application;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
+import javafx.stage.Window;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import trajectorium.command.*;
 import trajectorium.ui.ControlPanel;
+import trajectorium.ui.NewBodyDialog;
 
 public class Main extends Application {
     public static void main() {
@@ -29,6 +32,9 @@ public class Main extends Application {
     double canvasHeight = config.getCanvasHeight();
     double scale = config.getScale();
 
+    CelestialFactory factory = new CelestialFactory(simulation, scale);
+    int bodyCounter = 0;
+
     Celestial trackedBody = null;
     double currentOrigX = canvasWidth / 2;
     double currentOrigY = canvasHeight / 2;
@@ -36,6 +42,7 @@ public class Main extends Application {
     @Override
     public void start(Stage stage) {
         simulation.setSimulationSpeed(config.getSimulationSpeed());
+        factory.setTrailMaxPoints(config.getTrailMaxPoints());
         log.info("Запуск Trajectorium: окно {}x{}, масштаб {}, шаг {} года", canvasWidth, canvasHeight,
                 scale, simulation.getDt());
 
@@ -66,11 +73,15 @@ public class Main extends Application {
         buildDefaultScene();
 
         canvas.setOnMouseClicked(event -> {
-            Celestial clicked = findBodyAt(event.getX(), event.getY(), currentOrigX, currentOrigY);
-            if (clicked != trackedBody) {
-                log.debug("Камера: {}", clicked == null ? "обзор сцены" : "слежение за " + clicked.getName());
+            if (event.getButton() == MouseButton.PRIMARY) {
+                Celestial clicked = findBodyAt(event.getX(), event.getY(), currentOrigX, currentOrigY);
+                if (clicked != trackedBody) {
+                    log.debug("Камера: {}", clicked == null ? "обзор сцены" : "слежение за " + clicked.getName());
+                }
+                trackedBody = clicked;
+            } else if (event.getButton() == MouseButton.SECONDARY) {
+                addBodyAt(event.getX(), event.getY(), canvas.getScene().getWindow());
             }
-            trackedBody = clicked;
         });
 
         AnimationTimer timer = new AnimationTimer() {
@@ -156,10 +167,48 @@ public class Main extends Application {
         return null;
     }
 
-    private void buildDefaultScene() {
-        CelestialFactory factory = new CelestialFactory(simulation, scale);
-        factory.setTrailMaxPoints(config.getTrailMaxPoints());
+    private void addBodyAt(double scrX, double scrY, Window owner) {
+        double x = (scrX - currentOrigX) / scale;
+        double y = (scrY - currentOrigY) / scale;
 
+        boolean isRunning = simulation.isRunning();
+        if (isRunning) {
+            simulation.pause();
+        }
+
+        try {
+            NewBodyDialog.show(owner, x, y, "Тело " + (bodyCounter + 1), speedHint(x, y))
+                    .ifPresent(d -> {
+                        history.execute(new AddBodyCommand(simulation, () ->
+                                factory.createFree(d.name(), d.mass(), d.unit(), x, y,
+                                        d.vx(), d.vy(), d.radius(), d.color())));
+                        bodyCounter++;
+                    });
+        } finally {
+            if (isRunning) {
+                simulation.play();
+            }
+        }
+    }
+
+    private String speedHint(double x, double y) {
+        Celestial heaviest = null;
+        for (Celestial c : simulation.getBodies()) {
+            if (heaviest == null || c.getMass() > heaviest.getMass()) {
+                heaviest = c;
+            }
+        }
+        if (heaviest == null) {
+            return "";
+        }
+
+        double[] p = heaviest.getPos();
+        double r = Math.hypot(x - p[0], y - p[1]);
+        return String.format("Круговая скорость вокруг %s: %.3f а.е./год",
+                heaviest.getName(), CelestialFactory.circularVelocity(heaviest.getMass(), r));
+    }
+
+    private void buildDefaultScene() {
         Celestial Sun = factory.createStar("Sun", 1, 0, 0, 20, Color.YELLOW);
         Celestial Mercury = factory.createOrbiting("Mercury", 1.66e-7, Sun, 0.39, 1,
                 Color.GRAY, true);
@@ -177,6 +226,5 @@ public class Main extends Application {
                 Color.NAVAJOWHITE, false);
         Celestial Asteroid = factory.createFree("Asteroid", 1e-19, CelestialFactory.MassUnit.SOLAR_MASSES,
                 10, -1, -1, 0.7, 0.1, Color.GRAY);
-
     }
 }
