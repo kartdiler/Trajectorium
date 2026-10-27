@@ -7,6 +7,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
@@ -14,6 +15,7 @@ import javafx.stage.Window;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import trajectorium.command.*;
+import trajectorium.ui.BodyInfoPanel;
 import trajectorium.ui.ControlPanel;
 import trajectorium.ui.NewBodyDialog;
 
@@ -35,6 +37,8 @@ public class Main extends Application {
     CelestialFactory factory = new CelestialFactory(simulation, scale);
     int bodyCounter = 0;
 
+    BodyInfoPanel infoPanel;
+
     Celestial trackedBody = null;
     double currentOrigX = canvasWidth / 2;
     double currentOrigY = canvasHeight / 2;
@@ -48,24 +52,31 @@ public class Main extends Application {
 
         BorderPane root = new BorderPane();
         root.setStyle("-fx-background-color: black");
+
         Canvas canvas = new Canvas(canvasWidth, canvasHeight);
         GraphicsContext gc = canvas.getGraphicsContext2D();
+
         ControlPanel panel = new ControlPanel(simulation, history, this::buildDefaultScene);
+        infoPanel = new BodyInfoPanel(simulation, history);
+
+        VBox sideBar = new VBox(panel, infoPanel);
+        sideBar.setStyle("-fx-background-color: #222222");
+
         root.setCenter(canvas);
-        root.setRight(panel);
+        root.setRight(sideBar);
 
         simulation.addListener(new SimulationListener() {
             @Override
             public void onBodyRemoved(Celestial body) {
                 if (body == trackedBody) {
                     log.info("Отслеживаемое тело {} удалено, камера возвращена в центр", body.getName());
-                    trackedBody = null;
+                    select(null);
                 }
             }
 
             @Override
             public void onReset() {
-                trackedBody = null;
+                select(null);
             }
         });
         simulation.addListener(new EnergyMonitor(1000));
@@ -75,10 +86,7 @@ public class Main extends Application {
         canvas.setOnMouseClicked(event -> {
             if (event.getButton() == MouseButton.PRIMARY) {
                 Celestial clicked = findBodyAt(event.getX(), event.getY(), currentOrigX, currentOrigY);
-                if (clicked != trackedBody) {
-                    log.debug("Камера: {}", clicked == null ? "обзор сцены" : "слежение за " + clicked.getName());
-                }
-                trackedBody = clicked;
+                select(clicked);
             } else if (event.getButton() == MouseButton.SECONDARY) {
                 addBodyAt(event.getX(), event.getY(), canvas.getScene().getWindow());
             }
@@ -127,6 +135,14 @@ public class Main extends Application {
                     double y = cel.screenY(origY, scale) - cel.getCanvasRadius();
                     gc.fillOval(x, y, cel.getCanvasRadius() * 2, cel.getCanvasRadius() * 2);
                 }
+
+                if (trackedBody != null) {
+                    double cx = trackedBody.screenX(origX, scale);
+                    double cy = trackedBody.screenY(origY, scale);
+                    double r = trackedBody.getCanvasRadius() + 4;
+                    gc.setStroke(Color.WHITE);
+                    gc.strokeOval(cx - r, cy - r, 2 * r, 2 * r);
+                }
             }
         };
 
@@ -165,6 +181,16 @@ public class Main extends Application {
             }
         }
         return null;
+    }
+
+    private void select(Celestial body) {
+        if (body != trackedBody) {
+            log.debug("Камера: {}", body == null ? "обзор сцены" : "слежение за " + body.getName());
+        }
+        trackedBody = body;
+        if (infoPanel != null) {
+            infoPanel.setBody(body);
+        }
     }
 
     private void addBodyAt(double scrX, double scrY, Window owner) {
