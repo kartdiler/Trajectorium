@@ -6,11 +6,13 @@ import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import trajectorium.ui.ControlPanel;
 
 public class Main extends Application {
     public static void main() {
@@ -37,13 +39,13 @@ public class Main extends Application {
         log.info("Запуск Trajectorium: окно {}x{}, масштаб {}, шаг {} года", canvasWidth, canvasHeight,
                 scale, simulation.getDt());
 
-        CelestialFactory factory = new CelestialFactory(simulation, scale);
-        factory.setTrailMaxPoints(config.getTrailMaxPoints());
-
-        Group root = new Group();
+        BorderPane root = new BorderPane();
+        root.setStyle("-fx-background-color: black");
         Canvas canvas = new Canvas(canvasWidth, canvasHeight);
         GraphicsContext gc = canvas.getGraphicsContext2D();
-        root.getChildren().add(canvas);
+        ControlPanel panel = new ControlPanel(simulation, history, this::buildDefaultScene);
+        root.setCenter(canvas);
+        root.setRight(panel);
 
         simulation.addListener(new SimulationListener() {
             @Override
@@ -53,29 +55,15 @@ public class Main extends Application {
                     trackedBody = null;
                 }
             }
+
+            @Override
+            public void onReset() {
+                trackedBody = null;
+            }
         });
         simulation.addListener(new EnergyMonitor(1000));
 
-        Celestial Sun = factory.createStar("Sun", 1, 0, 0, 20, Color.YELLOW);
-        Celestial Mercury = factory.createOrbiting("Mercury", 1.66e-7, Sun, 0.39, 1,
-                                                    Color.GRAY, true);
-        Celestial Venus = factory.createOrbiting("Venus", 2.45e-6, Sun, 0.72, 1.7,
-                                                 Color.LIGHTYELLOW, false);
-        Celestial Earth = factory.createOrbiting("Earth", 3.003e-6, Sun, 1, 1.8,
-                                                 Color.BLUE, true);
-        Celestial Mars = factory.createOrbiting("Mars", 3.23e-7, Sun, 1.52, 1.4,
-                                                Color.INDIANRED, true);
-        Celestial Jupiter = factory.createOrbiting("Jupiter", 9.55e-4, Sun, 5.2, 3,
-                                                    Color.ORANGERED, true);
-        Celestial Moon = factory.createOrbiting("Moon", 3.69e-8, Jupiter, 0.11257, 0.5,
-                                                Color.WHITE, true);
-        Celestial Saturn = factory.createOrbiting("Saturn", 2.86e-4, Sun, 9.54, 2.6,
-                                                    Color.NAVAJOWHITE, false);
-        Celestial Asteroid = factory.createFree("Asteroid", 1e-19, CelestialFactory.MassUnit.SOLAR_MASSES,
-                                                10, -1, -1, 0.7, 0.1, Color.GRAY);
-
-        Celestial Sun2 = factory.createFree("Sun2", 1, CelestialFactory.MassUnit.SOLAR_MASSES,
-                                            -100, -20, 2, 0.5, 20, Color.CYAN);
+        buildDefaultScene();
 
         canvas.setOnMouseClicked(event -> {
             Celestial clicked = findBodyAt(event.getX(), event.getY(), currentOrigX, currentOrigY);
@@ -136,8 +124,6 @@ public class Main extends Application {
         Scene scene = new Scene(root, Color.BLACK);
         stage.setScene(scene);
         stage.setTitle("Trajectorium");
-        stage.setWidth(canvasWidth);
-        stage.setHeight(canvasHeight);
         stage.show();
 
         stage.setOnCloseRequest(e -> log.info("Приложение закрыто"));
@@ -168,5 +154,29 @@ public class Main extends Application {
             }
         }
         return null;
+    }
+
+    private void buildDefaultScene() {
+        CelestialFactory factory = new CelestialFactory(simulation, scale);
+        factory.setTrailMaxPoints(config.getTrailMaxPoints());
+
+        Celestial Sun = factory.createStar("Sun", 1, 0, 0, 20, Color.YELLOW);
+        Celestial Mercury = factory.createOrbiting("Mercury", 1.66e-7, Sun, 0.39, 1,
+                Color.GRAY, true);
+        Celestial Venus = factory.createOrbiting("Venus", 2.45e-6, Sun, 0.72, 1.7,
+                Color.LIGHTYELLOW, false);
+        Celestial Earth = factory.createOrbiting("Earth", 3.003e-6, Sun, 1, 1.8,
+                Color.BLUE, true);
+        Celestial Mars = factory.createOrbiting("Mars", 3.23e-7, Sun, 1.52, 1.4,
+                Color.INDIANRED, true);
+        Celestial Jupiter = factory.createOrbiting("Jupiter", 9.55e-4, Sun, 5.2, 3,
+                Color.ORANGERED, true);
+        Celestial Moon = factory.createOrbiting("Moon", 3.69e-8, Jupiter, 0.11257, 0.5,
+                Color.WHITE, true);
+        Celestial Saturn = factory.createOrbiting("Saturn", 2.86e-4, Sun, 9.54, 2.6,
+                Color.NAVAJOWHITE, false);
+        Celestial Asteroid = factory.createFree("Asteroid", 1e-19, CelestialFactory.MassUnit.SOLAR_MASSES,
+                10, -1, -1, 0.7, 0.1, Color.GRAY);
+
     }
 }
