@@ -7,6 +7,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -16,8 +17,11 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import trajectorium.command.*;
 import trajectorium.ui.BodyInfoPanel;
+import trajectorium.ui.Camera;
 import trajectorium.ui.ControlPanel;
 import trajectorium.ui.NewBodyDialog;
+
+import java.util.List;
 
 public class Main extends Application {
     public static void main() {
@@ -26,45 +30,49 @@ public class Main extends Application {
 
     private static final Logger log = LoggerFactory.getLogger(Main.class);
 
+    private static final double MIN_BODY_PX = 2;
+    private static final double CLICK_MIN_PX = 8;
+    private static final double DRAG_THRESHOLD = 4;
+
     AppConfig config = AppConfig.load();
     Simulation simulation = new Simulation(config.getDt());
     CommandHistory history = new CommandHistory(50);
-
-    double canvasWidth = config.getCanvasWidth();
-    double canvasHeight = config.getCanvasHeight();
-    double scale = config.getScale();
-
-    CelestialFactory factory = new CelestialFactory(simulation, scale);
-    int bodyCounter = 0;
+    CelestialFactory factory = new CelestialFactory(simulation, config.getScale());
+    Camera camera = new Camera(config.getScale());
+    EnergyMonitor energyMonitor = new EnergyMonitor(2000);
 
     BodyInfoPanel infoPanel;
-
+    boolean following = false;
     Celestial trackedBody = null;
-    double currentOrigX = canvasWidth / 2;
-    double currentOrigY = canvasHeight / 2;
+    int bodyCounter = 0;
+
+    double pressX, pressY, lastX, lastY;
+    boolean dragged = false;
 
     @Override
     public void start(Stage stage) {
         simulation.setSimulationSpeed(config.getSimulationSpeed());
         factory.setTrailMaxPoints(config.getTrailMaxPoints());
-        log.info("Запуск Trajectorium: окно {}x{}, масштаб {}, шаг {} года", canvasWidth, canvasHeight,
-                scale, simulation.getDt());
+        log.info("Запуск Trajectorium: масштаб {}, шаг {} года", config.getScale(), simulation.getDt());
+
+        Canvas canvas = new Canvas();
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        Pane canvasHolder = new Pane(canvas);
+        canvasHolder.setPrefSize(config.getCanvasWidth(), config.getCanvasHeight());
+        canvas.widthProperty().bind(canvasHolder.widthProperty());
+        canvas.heightProperty().bind(canvasHolder.heightProperty());
+
+        ControlPanel controlPanel = new ControlPanel(simulation, history, this::buildDefaultScene);
+        infoPanel = new BodyInfoPanel(simulation, history);
+        VBox sideBar = new VBox(controlPanel, infoPanel);
+        sideBar.setStyle("-fx-background-color: #222222");
 
         BorderPane root = new BorderPane();
         root.setStyle("-fx-background-color: black");
-
-        Canvas canvas = new Canvas(canvasWidth, canvasHeight);
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-
-        ControlPanel panel = new ControlPanel(simulation, history, this::buildDefaultScene);
-        infoPanel = new BodyInfoPanel(simulation, history);
-
-        VBox sideBar = new VBox(panel, infoPanel);
-        sideBar.setStyle("-fx-background-color: #222222");
-
-        root.setCenter(canvas);
+        root.setCenter(canvasHolder);
         root.setRight(sideBar);
 
+        simulation.addListener(energyMonitor);
         simulation.addListener(new SimulationListener() {
             @Override
             public void onBodyRemoved(Celestial body) {
@@ -79,16 +87,46 @@ public class Main extends Application {
                 select(null);
             }
         });
-        simulation.addListener(new EnergyMonitor(1000));
 
         buildDefaultScene();
 
+        canvas.setOnMousePressed(event -> {
+            if (event.getButton() == MouseButton.PRIMARY) {
+                pressX = lastX = event.getX();
+                pressY = lastY = event.getY();
+                dragged = false;
+            }
+        });
+
+        canvas.setOnMouseDragged(event -> {
+            if (!event.isPrimaryButtonDown()) return;
+            if (!dragged && Math.hypot(event.getX() - pressX, event.getY() - pressY) < DRAG_THRESHOLD) return;
+
+            dragged = true;
+            following = false;
+            camera.panByPixels(event.getX() - lastX, event.getY() - lastY);
+            lastX = event.getX();
+            lastY = event.getY();
+        });
+
         canvas.setOnMouseClicked(event -> {
             if (event.getButton() == MouseButton.PRIMARY) {
-                Celestial clicked = findBodyAt(event.getX(), event.getY(), currentOrigX, currentOrigY);
+                if (dragged) {
+                    dragged = false;
+                    return;
+                }
+                Celestial clicked = findBodyAt(event.getX(), event.getY());
                 select(clicked);
+                following = clicked != null;
             } else if (event.getButton() == MouseButton.SECONDARY) {
                 addBodyAt(event.getX(), event.getY(), canvas.getScene().getWindow());
+            }
+        });
+
+        canvas.setOnScroll(event -> {
+            double factor = Math.exp(event.getDeltaY() * 0.003);
+            if (following) {
+                camera.zoomAt(factor, camera.getViewWidth() / 2, camera.getViewHeight() / 2);
             }
         });
 
@@ -97,52 +135,7 @@ public class Main extends Application {
             public void handle(long l) {
                 gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
                 simulation.step();
-
-                double origX, origY;
-                if(trackedBody != null) {
-                    origX = canvasWidth / 2 - trackedBody.getPos()[0] * scale;
-                    origY = canvasHeight / 2 - trackedBody.getPos()[1] * scale;
-                } else {
-                    origX = canvasWidth / 2;
-                    origY = canvasHeight / 2;
-                }
-
-                currentOrigX = origX;
-                currentOrigY = origY;
-
-                for (Celestial cel : simulation.getBodies()) {
-                    var points = cel.getTrail().getPoints();
-                    int total = points.size();
-                    int i = 0;
-
-                    gc.setFill(cel.getColor());
-                    for (double[] point : points) {
-                        double sx = origX + point[0] * scale;
-                        double sy = origY + point[1] * scale;
-
-                        double opacity = total > 1 ? (double) i / (total - 1) : 1.0;
-                        gc.setGlobalAlpha(opacity * 0.6);
-                        gc.fillOval(sx - 1, sy - 1, 2, 2);
-                        i++;
-                    }
-
-                    gc.setGlobalAlpha(1.0);
-                }
-
-                for (Celestial cel : simulation.getBodies()) {
-                    gc.setFill(cel.getColor());
-                    double x = cel.screenX(origX, scale) - cel.getCanvasRadius();
-                    double y = cel.screenY(origY, scale) - cel.getCanvasRadius();
-                    gc.fillOval(x, y, cel.getCanvasRadius() * 2, cel.getCanvasRadius() * 2);
-                }
-
-                if (trackedBody != null) {
-                    double cx = trackedBody.screenX(origX, scale);
-                    double cy = trackedBody.screenY(origY, scale);
-                    double r = trackedBody.getCanvasRadius() + 4;
-                    gc.setStroke(Color.WHITE);
-                    gc.strokeOval(cx - r, cy - r, 2 * r, 2 * r);
-                }
+                render(gc, canvas.getWidth(), canvas.getHeight());
             }
         };
 
@@ -162,25 +155,34 @@ public class Main extends Application {
                 history.redo();
             } else if (e.getCode() == KeyCode.SPACE) {
                 history.execute(new SetRunningCommand(simulation, !simulation.isRunning()));
+            } else if (e.getCode() == KeyCode.F) {
+                fitView();
+            } else if (e.getCode() == KeyCode.DIGIT0) {
+                following = false;
+                camera.reset();
+            } else if (e.getCode() == KeyCode.F11) {
+                stage.setFullScreen(!stage.isFullScreen());
             }
         });
     }
 
-    Celestial findBodyAt(double scrX, double scrY, double origX, double origY) {
+    private double bodyRadiusPx(Celestial cel) {
+        return Math.max(MIN_BODY_PX, cel.getRealRadius() * camera.getScale());
+    }
+
+    private Celestial findBodyAt(double scrX, double scrY) {
+        Celestial best = null;
+        double bestDistance = Double.MAX_VALUE;
         for (Celestial cel : simulation.getBodies()) {
-            double cx = cel.screenX(origX, scale);
-            double cy = cel.screenY(origY, scale);
+            double[] p = cel.getPos();
 
-            double dx = scrX - cx;
-            double dy = scrY - cy;
-
-            double dist = Math.sqrt(dx * dx + dy * dy);
-            double clickRadius = Math.max(cel.getCanvasRadius(), 8);
-            if (dist <= clickRadius) {
-                return cel;
+            double dist = Math.hypot(scrX - camera.toScreenX(p[0]), scrY - camera.toScreenY(p[1]));
+            if (dist <= Math.max(bodyRadiusPx(cel), CLICK_MIN_PX) && dist < bestDistance) {
+                best = cel;
+                bestDistance = dist;
             }
         }
-        return null;
+        return best;
     }
 
     private void select(Celestial body) {
@@ -193,9 +195,75 @@ public class Main extends Application {
         }
     }
 
+    private void fitView() {
+        List<Celestial> bodies = simulation.getBodies();
+        if (bodies.isEmpty()) return;
+
+        double minX = Double.MAX_VALUE;
+        double minY = Double.MAX_VALUE;
+        double maxX = -Double.MAX_VALUE;
+        double maxY = -Double.MAX_VALUE;
+
+        for (Celestial cel : bodies) {
+            double[] p = cel.getPos();
+            minX = Math.min(minX, p[0]);
+            maxX = Math.max(maxX, p[0]);
+            minY = Math.min(minY, p[1]);
+            maxY = Math.max(maxY, p[1]);
+        }
+
+        following = false;
+        camera.fit(minX, minY, maxX, maxY, 0.1);
+    }
+
+    private void render(GraphicsContext gc, double w, double h) {
+        camera.setViewSize(w, h);
+        if (following && trackedBody != null) {
+            double[] p = trackedBody.getPos();
+            camera.centerOn(p[0], p[1]);
+        }
+
+        gc.setFill(Color.BLACK);
+        gc.fillRect(0, 0, w, h);
+
+        for (Celestial cel : simulation.getBodies()) {
+            var points = cel.getTrail().getPoints();
+            int total = points.size();
+            int i = 0;
+
+            gc.setFill(cel.getColor());
+            for (double[] point : points) {
+                double sx = camera.toScreenX(point[0]);
+                double sy = camera.toScreenY(point[1]);
+
+                double opacity = total > 1 ? (double) i / (total - 1) : 1.0;
+                gc.setGlobalAlpha(opacity * 0.6);
+                gc.fillOval(sx - 1, sy - 1, 2, 2);
+                i++;
+            }
+        }
+        gc.setGlobalAlpha(1.0);
+
+        for (Celestial cel : simulation.getBodies()) {
+            double[] p = cel.getPos();
+            double cx = camera.toScreenX(p[0]);
+            double cy = camera.toScreenY(p[1]);
+            double r = bodyRadiusPx(cel);
+            gc.setFill(cel.getColor());
+            gc.fillOval(cx - r, cy - r, 2 * r, 2 * r);
+        }
+
+        if (trackedBody != null) {
+            double[] p = trackedBody.getPos();
+            double r = bodyRadiusPx(trackedBody) + 4;
+            gc.setStroke(Color.WHITE);
+            gc.strokeOval(camera.toScreenX(p[0]) - r, camera.toScreenY(p[1]) - r, 2 * r, 2 * r);
+        }
+    }
+
     private void addBodyAt(double scrX, double scrY, Window owner) {
-        double x = (scrX - currentOrigX) / scale;
-        double y = (scrY - currentOrigY) / scale;
+        double x = camera.toWorldX(scrX);
+        double y = camera.toWorldY(scrY);
 
         boolean isRunning = simulation.isRunning();
         if (isRunning) {
