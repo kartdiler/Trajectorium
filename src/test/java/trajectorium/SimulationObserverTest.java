@@ -158,4 +158,19 @@ public class SimulationObserverTest {
 
         assertEquals(List.of(2.0, 100.0), speeds);
     }
+
+    @Test
+    void integratorChangeIsReported() {
+        Simulation sim = new Simulation(DT);
+        List<String> names = new ArrayList<String>();
+        sim.addListener(new SimulationListener() {
+            @Override
+            public void onIntegratorChanged(Integrator integrator) {
+                names.add(integrator.getName());
+            }
+        });
+
+        sim.setIntegrator(new EulerIntegrator());
+        assertEquals(List.of("Euler"), names);
+    }
 }

@@ -4,6 +4,7 @@ import javafx.scene.paint.Color;
 import org.junit.jupiter.api.Test;
 import trajectorium.Celestial;
 import trajectorium.CelestialFactory;
+import trajectorium.EulerIntegrator;
 import trajectorium.Simulation;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -125,5 +126,18 @@ public class CommandTest {
         history.undo();
 
         assertEquals(4, calls.get());
+    }
+
+    @Test
+    void integratorCommandRestoresPreviousIntegrator() {
+        Simulation sim = new Simulation(DT);
+        CommandHistory history = new CommandHistory(10);
+        String before = sim.getIntegrator().getName();
+
+        history.execute(new SetIntegratorCommand(sim, new EulerIntegrator()));
+        assertEquals("Euler", sim.getIntegrator().getName());
+
+        history.undo();
+        assertEquals(before, sim.getIntegrator().getName());
     }
 }
