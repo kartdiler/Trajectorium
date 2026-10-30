@@ -11,6 +11,7 @@ import javafx.util.StringConverter;
 import trajectorium.CelestialFactory.MassUnit;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 public final class NewBodyDialog {
@@ -19,8 +20,8 @@ public final class NewBodyDialog {
     public record Result(String name, double mass, MassUnit unit,
                          double vx, double vy, int radius, Color color) {}
 
-    public static Optional<Result> show(Window owner, double x, double y, String defaultName,
-                                        String speedHint) {
+    public static Optional<Result> show(Window owner, double x, double y, double vx0, double vy0,
+                                        String defaultName, String speedHint) {
         Dialog<Result> dialog = new Dialog<Result>();
         dialog.initOwner(owner);
         dialog.setTitle("Новое тело");
@@ -45,8 +46,8 @@ public final class NewBodyDialog {
             }
         });
 
-        TextField vx = new TextField("0");
-        TextField vy = new TextField("0");
+        TextField vx = new TextField(fmt(vx0));
+        TextField vy = new TextField(fmt(vy0));
         Spinner<Integer> radius = new Spinner<Integer>(1, 50, 4);
         ColorPicker color = new ColorPicker(Color.LIGHTGREEN);
 
@@ -114,5 +115,9 @@ public final class NewBodyDialog {
             case EARTH_MASSES -> "М Земли";
             case KILOGRAMS -> "кг";
         };
+    }
+
+    private static String fmt(double v) {
+        return String.format(Locale.ROOT, "%.4f", v);
     }
 }

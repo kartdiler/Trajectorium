@@ -16,10 +16,7 @@ import javafx.stage.Window;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import trajectorium.command.*;
-import trajectorium.ui.BodyInfoPanel;
-import trajectorium.ui.Camera;
-import trajectorium.ui.ControlPanel;
-import trajectorium.ui.NewBodyDialog;
+import trajectorium.ui.*;
 
 import java.util.List;
 
@@ -48,6 +45,12 @@ public class Main extends Application {
 
     double pressX, pressY, lastX, lastY;
     boolean dragged = false;
+
+    boolean placing = false;
+    boolean placeWasRunning = false;
+    double placePressX, placePressY;
+    double placeX, placeY;
+    double placeEndX, placeEndY;
 
     @Override
     public void start(Stage stage) {
@@ -95,10 +98,20 @@ public class Main extends Application {
                 pressX = lastX = event.getX();
                 pressY = lastY = event.getY();
                 dragged = false;
+            } else if (event.getButton() == MouseButton.SECONDARY) {
+                startPlacing(event.getX(), event.getY());
             }
         });
 
         canvas.setOnMouseDragged(event -> {
+            if (event.isSecondaryButtonDown()) {
+                if (placing) {
+                    placeEndX = camera.toWorldX(event.getX());
+                    placeEndY = camera.toWorldY(event.getY());
+                }
+                return;
+            }
+
             if (!event.isPrimaryButtonDown()) return;
             if (!dragged && Math.hypot(event.getX() - pressX, event.getY() - pressY) < DRAG_THRESHOLD) return;
 
@@ -107,6 +120,12 @@ public class Main extends Application {
             camera.panByPixels(event.getX() - lastX, event.getY() - lastY);
             lastX = event.getX();
             lastY = event.getY();
+        });
+
+        canvas.setOnMouseReleased(event -> {
+            if (event.getButton() == MouseButton.SECONDARY && placing) {
+                finishPlacing(event.getX(), event.getY(), canvas.getScene().getWindow());
+            }
         });
 
         canvas.setOnMouseClicked(event -> {
@@ -118,8 +137,6 @@ public class Main extends Application {
                 Celestial clicked = findBodyAt(event.getX(), event.getY());
                 select(clicked);
                 following = clicked != null;
-            } else if (event.getButton() == MouseButton.SECONDARY) {
-                addBodyAt(event.getX(), event.getY(), canvas.getScene().getWindow());
             }
         });
 
@@ -164,6 +181,8 @@ public class Main extends Application {
                 camera.reset();
             } else if (e.getCode() == KeyCode.F11) {
                 stage.setFullScreen(!stage.isFullScreen());
+            } else if (e.getCode() == KeyCode.ESCAPE) {
+                cancelPlacing();
             }
         });
     }
@@ -264,29 +283,9 @@ public class Main extends Application {
             gc.setStroke(Color.WHITE);
             gc.strokeOval(camera.toScreenX(p[0]) - r, camera.toScreenY(p[1]) - r, 2 * r, 2 * r);
         }
-    }
 
-    private void addBodyAt(double scrX, double scrY, Window owner) {
-        double x = camera.toWorldX(scrX);
-        double y = camera.toWorldY(scrY);
-
-        boolean isRunning = simulation.isRunning();
-        if (isRunning) {
-            simulation.pause();
-        }
-
-        try {
-            NewBodyDialog.show(owner, x, y, "Тело " + (bodyCounter + 1), speedHint(x, y))
-                    .ifPresent(d -> {
-                        history.execute(new AddBodyCommand(simulation, () ->
-                                factory.createFree(d.name(), d.mass(), d.unit(), x, y,
-                                        d.vx(), d.vy(), d.radius(), d.color())));
-                        bodyCounter++;
-                    });
-        } finally {
-            if (isRunning) {
-                simulation.play();
-            }
+        if (placing) {
+            drawPlacement(gc);
         }
     }
 
@@ -325,5 +324,82 @@ public class Main extends Application {
                 Color.NAVAJOWHITE, false);
         Celestial Asteroid = factory.createFree("Asteroid", 1e-19, CelestialFactory.MassUnit.SOLAR_MASSES,
                 10, -1, -1, 0.7, 0.1, Color.GRAY);
+    }
+
+    private void drawPlacement(GraphicsContext gc) {
+        double sx = camera.toScreenX(placeX);
+        double sy = camera.toScreenY(placeY);
+        double ex = camera.toScreenX(placeEndX);
+        double ey = camera.toScreenY(placeEndY);
+
+        gc.setStroke(Color.LIGHTGREEN);
+        gc.setFill(Color.LIGHTGREEN);
+        gc.setLineWidth(1.5);
+        gc.strokeOval(sx - 4, sy - 4, 8, 8);
+        gc.strokeLine(sx, sy, ex, ey);
+
+        double length = Math.hypot(ex - sx, ey - sx);
+        if (length > 6) {
+            double angle = Math.atan2(ey - sy, ex - sx);
+            double head = 10;
+            gc.fillPolygon(
+                    new double[]{ex, ex - head * Math.cos(angle - 0.4), ex - head * Math.cos(angle + 0.4)},
+                    new double[]{ey, ey - head * Math.sin(angle - 0.4), ey - head * Math.sin(angle + 0.4)},
+                    3
+            );
+        }
+
+        double[] v = DragVelocity.velocity(placeX, placeY, placeEndX, placeEndY);
+        double speed = Math.hypot(v[0], v[1]);
+        gc.fillText(String.format("v = %.2f а.е./год (%.1f км/с)", speed, speed * BodyInfo.AU_YEAR_TO_KM_S),
+                ex + 12, ey - 8);
+        gc.setLineWidth(1);
+    }
+
+    private void startPlacing(double scrX, double scrY) {
+        placing = true;
+        placeWasRunning = simulation.isRunning();
+        if (placeWasRunning) {
+            simulation.pause();
+        }
+        placePressX = scrX;
+        placePressY = scrY;
+        placeX = placeEndX = camera.toWorldX(scrX);
+        placeY = placeEndY = camera.toWorldY(scrY);
+    }
+
+    private void cancelPlacing() {
+        if (!placing) {
+            return;
+        }
+        placing = false;
+        if (placeWasRunning) {
+            simulation.play();
+        }
+    }
+
+    private void finishPlacing(double scrX, double scrY, Window owner) {
+        double[] v = {0, 0};
+        if (Math.hypot(scrX - placePressX, scrY - placePressY) >= DRAG_THRESHOLD) {
+            v = DragVelocity.velocity(placeX, placeY, placeEndX, placeEndY);
+        }
+        try {
+            showNewBodyDialog(owner, placeX, placeY, v[0], v[1]);
+        } finally {
+            placing = false;
+            if (placeWasRunning) {
+                simulation.play();
+            }
+        }
+    }
+
+    private void showNewBodyDialog(Window owner, double x, double y, double vx, double vy) {
+        NewBodyDialog.show(owner, x, y, vx, vy, "Тело " + (bodyCounter + 1), speedHint(x, y))
+                .ifPresent(d -> {
+                    history.execute(new AddBodyCommand(simulation, () ->
+                            factory.createFree(d.name(), d.mass(), d.unit(), x, y,
+                                    d.vx(), d.vy(), d.radius(), d.color())));
+                    bodyCounter++;
+                });
     }
 }
