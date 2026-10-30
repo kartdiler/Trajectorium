@@ -81,7 +81,17 @@ public class ControlPanel extends VBox {
             }
         });
 
-        help.setText("ЛКМ по телу: следить за ним\nПКМ: добавить тело\nПробел: пауза\nCtrl+Z / Ctrl+Y: отмена / повтор");
+        help.setText("""
+                ЛКМ по телу: выбрать и следить
+                Зажать ЛКМ: перетаскивание камеры
+                Колесо: масштаб
+                ПКМ: добавить тело
+                Пробел: пауза
+                Ctrl+Z / Ctrl+Y: отмена / повтор
+                F: вписать все
+                0: масштаб по умолчанию
+                F11: полный экран
+                """);
 
         history.setOnChange(this::refreshHistoryButtons);
 

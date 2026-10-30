@@ -31,7 +31,7 @@ public class Main extends Application {
     private static final Logger log = LoggerFactory.getLogger(Main.class);
 
     private static final double MIN_BODY_PX = 2;
-    private static final double CLICK_MIN_PX = 8;
+    private static final double CLICK_MIN_PX = 20;
     private static final double DRAG_THRESHOLD = 4;
 
     AppConfig config = AppConfig.load();
@@ -127,6 +127,8 @@ public class Main extends Application {
             double factor = Math.exp(event.getDeltaY() * 0.003);
             if (following) {
                 camera.zoomAt(factor, camera.getViewWidth() / 2, camera.getViewHeight() / 2);
+            } else {
+                camera.zoomAt(factor, event.getX(), event.getY());
             }
         });
 
@@ -190,6 +192,9 @@ public class Main extends Application {
             log.debug("Камера: {}", body == null ? "обзор сцены" : "слежение за " + body.getName());
         }
         trackedBody = body;
+        if (body == null) {
+            following = false;
+        }
         if (infoPanel != null) {
             infoPanel.setBody(body);
         }
