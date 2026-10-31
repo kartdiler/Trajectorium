@@ -6,6 +6,7 @@ import trajectorium.Celestial;
 import trajectorium.CelestialFactory;
 import trajectorium.EulerIntegrator;
 import trajectorium.Simulation;
+import trajectorium.io.SceneStorage;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -139,5 +140,21 @@ public class CommandTest {
 
         history.undo();
         assertEquals(before, sim.getIntegrator().getName());
+    }
+
+    @Test
+    void loadSceneCommandCanBeUndone() throws Exception {
+        Simulation sim = new Simulation(DT);
+        CelestialFactory factory = new CelestialFactory(sim, 100);
+        factory.createStar("Sun", 1.0, 0, 0, 20, Color.YELLOW);
+        CommandHistory history = new CommandHistory(10);
+
+        history.execute(new LoadSceneCommand(sim, factory, SceneStorage.loadResource("/scenes/binary-star.json")));
+        assertEquals(3, sim.getBodies().size());
+        assertEquals("Star A", sim.getBodies().get(0).getName());
+
+        history.undo();
+        assertEquals(1, sim.getBodies().size());
+        assertEquals("Sun", sim.getBodies().get(0).getName());
     }
 }

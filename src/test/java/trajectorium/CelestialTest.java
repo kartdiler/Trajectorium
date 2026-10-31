@@ -136,6 +136,24 @@ public class CelestialTest {
         assertTrue(maxRel < 1e-3, "Энергия ушла на " + maxRel);
     }
 
+    @Test
+    void fullVelocityMatchesConstructorInputAndSetVelocityIsItsInverse() {
+        List<Celestial> system = new ArrayList<Celestial>();
+        system.add(new Celestial("Sun", 1.0, 0, 0, 0, 0, 20, Color.YELLOW, system, DT, 100));
+        Celestial earth = new Celestial("Earth", 3.003e-6, 1, 0, 0, 2 * Math.PI,
+                5, Color.BLUE, system, DT, 100);
+        system.add(earth);
+
+        double[] v = earth.getVelocity(DT, system);
+        assertEquals(0, v[0], 1e-9);
+        assertEquals(2 * Math.PI, v[1], 1e-9);
+
+        earth.setVelocity(1, 2, system, DT);
+        double[] w = earth.getVelocity(DT, system);
+        assertEquals(1, w[0], 1e-9);
+        assertEquals(2, w[1], 1e-9);
+    }
+
     private static void run(List<Celestial> system, int steps) {
         for (int i = 0; i < steps; i++) {
             VERLET.step(system, DT);
