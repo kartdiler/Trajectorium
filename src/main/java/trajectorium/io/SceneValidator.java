@@ -19,6 +19,10 @@ public final class SceneValidator {
             throw new SceneFormatException("Неподдерживаемая версия формата: " + d.version());
         }
 
+        if (!SceneMapper.isKnownIntegrator(d.integrator())) {
+            throw new SceneFormatException("Неизвестный интегратор: " + d.integrator());
+        }
+
         if (!inRange(d.simulationSpeed(), 0.1, 100)) {
             throw new SceneFormatException("Скорость симуляции должна быть от 0,1 до 100");
         }
