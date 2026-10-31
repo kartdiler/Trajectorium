@@ -37,7 +37,17 @@ public final class SceneValidator {
         }
 
         for (int i = 0; i < bodies.size(); i++) {
+            validateBody(i + 1, bodies.get(i));
+        }
 
+        for (int i = 0; i < bodies.size(); i++) {
+            for (int j = i + 1; j < bodies.size(); j++) {
+                BodyData a = bodies.get(i);
+                BodyData b = bodies.get(j);
+                if (Math.hypot(a.x() - b.x(), a.y() - b.y()) < 1e-9) {
+                    throw new SceneFormatException("Тела \"" + a.name() + "\" и \"" + b.name() + "\" находятся в одной точке");
+                }
+            }
         }
     }
 
