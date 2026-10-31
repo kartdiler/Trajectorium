@@ -89,6 +89,7 @@ public class Main extends Application {
             @Override
             public void onReset() {
                 select(null);
+                camera.reset();
             }
         });
 

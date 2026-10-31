@@ -1,5 +1,6 @@
 package trajectorium.io;
 
+import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,7 +46,10 @@ public final class SceneStorage {
         try {
             data = MAPPER.readValue(in, SceneData.class);
         } catch (JsonProcessingException e) {
-            throw new SceneFormatException("Файл поврежден или имеет неверный формат: " + e.getOriginalMessage(), e);
+            JsonLocation loc = e.getLocation();
+            String where = (loc == null || loc.getLineNr() < 0) ? "" : " (строка " + loc.getLineNr() +
+                    ", столбец " + loc.getColumnNr() + ")";
+            throw new SceneFormatException("Файл поврежден или имеет неверный формат" + where, e);
         }
 
         SceneValidator.validate(data);

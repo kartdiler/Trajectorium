@@ -1,6 +1,9 @@
 package trajectorium.ui;
 
 import javafx.scene.control.Alert;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 import org.slf4j.Logger;
@@ -16,6 +19,8 @@ import trajectorium.io.SceneStorage;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.List;
 
 public class SceneFileController {
@@ -120,7 +125,21 @@ public class SceneFileController {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Trajectorium");
         alert.setHeaderText(header);
-        alert.setContentText(e.getMessage());
+
+        String message = e.getMessage() == null ? e.toString() : e.getMessage();
+        Label text = new Label(message);
+        text.setWrapText(true);
+        text.setMaxWidth(460);
+        alert.getDialogPane().setContent(text);
+        alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+
+        StringWriter trace = new StringWriter();
+        e.printStackTrace(new PrintWriter(trace));
+        TextArea details = new TextArea(trace.toString());
+        details.setEditable(false);
+        details.setPrefRowCount(10);
+        alert.getDialogPane().setExpandableContent(details);
+
         alert.showAndWait();
     }
 }
