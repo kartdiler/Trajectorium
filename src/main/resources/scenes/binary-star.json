@@ -1,0 +1,33 @@
+{
+  "version" : 1,
+  "integrator" : "Verlet",
+  "simulationSpeed" : 1.0,
+  "bodies" : [ {
+    "name" : "Star A",
+    "mass" : 0.5,
+    "x" : 1.0,
+    "y" : 0.0,
+    "vx" : 0.0,
+    "vy" : 2.221441469,
+    "canvasRadius" : 20.0,
+    "color" : "#FFD700"
+  }, {
+    "name" : "Star B",
+    "mass" : 0.5,
+    "x" : -1.0,
+    "y" : 0.0,
+    "vx" : 0.0,
+    "vy" : -2.221441469,
+    "canvasRadius" : 20.0,
+    "color" : "#FF8C00"
+  }, {
+    "name" : "Planet",
+    "mass" : 3.003e-6,
+    "x" : 6.0,
+    "y" : 0.0,
+    "vx" : 0.0,
+    "vy" : 2.565,
+    "canvasRadius" : 4.0,
+    "color" : "#4169E1"
+  } ]
+}

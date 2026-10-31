@@ -37,6 +37,7 @@ public class Main extends Application {
     CelestialFactory factory = new CelestialFactory(simulation, config.getScale());
     Camera camera = new Camera(config.getScale());
     EnergyMonitor energyMonitor = new EnergyMonitor(2000);
+    SceneFileController files = new SceneFileController(simulation, factory, history);
 
     BodyInfoPanel infoPanel;
     boolean following = false;
@@ -65,7 +66,7 @@ public class Main extends Application {
         canvas.widthProperty().bind(canvasHolder.widthProperty());
         canvas.heightProperty().bind(canvasHolder.heightProperty());
 
-        ControlPanel controlPanel = new ControlPanel(simulation, history, this::buildDefaultScene);
+        ControlPanel controlPanel = new ControlPanel(simulation, history, this::buildDefaultScene, files);
         infoPanel = new BodyInfoPanel(simulation, history);
         VBox sideBar = new VBox(controlPanel, infoPanel);
         sideBar.setStyle("-fx-background-color: #222222");
@@ -172,6 +173,10 @@ public class Main extends Application {
                 history.undo();
             } else if (e.isControlDown() && e.getCode() == KeyCode.Y) {
                 history.redo();
+            } else if (e.isControlDown() && e.getCode() == KeyCode.S) {
+                files.save(stage);
+            } else if (e.isControlDown() && e.getCode() == KeyCode.O) {
+                files.load(stage);
             } else if (e.getCode() == KeyCode.SPACE) {
                 history.execute(new SetRunningCommand(simulation, !simulation.isRunning()));
             } else if (e.getCode() == KeyCode.F) {
@@ -311,19 +316,19 @@ public class Main extends Application {
         Celestial Mercury = factory.createOrbiting("Mercury", 1.66e-7, Sun, 0.39, 1,
                 Color.GRAY, true);
         Celestial Venus = factory.createOrbiting("Venus", 2.45e-6, Sun, 0.72, 1.7,
-                Color.LIGHTYELLOW, false);
+                Color.LIGHTYELLOW, true);
         Celestial Earth = factory.createOrbiting("Earth", 3.003e-6, Sun, 1, 1.8,
                 Color.BLUE, true);
         Celestial Mars = factory.createOrbiting("Mars", 3.23e-7, Sun, 1.52, 1.4,
                 Color.INDIANRED, true);
         Celestial Jupiter = factory.createOrbiting("Jupiter", 9.55e-4, Sun, 5.2, 3,
                 Color.ORANGERED, true);
-        Celestial Moon = factory.createOrbiting("Moon", 3.69e-8, Jupiter, 0.11257, 0.5,
-                Color.WHITE, true);
         Celestial Saturn = factory.createOrbiting("Saturn", 2.86e-4, Sun, 9.54, 2.6,
-                Color.NAVAJOWHITE, false);
-        Celestial Asteroid = factory.createFree("Asteroid", 1e-19, CelestialFactory.MassUnit.SOLAR_MASSES,
-                10, -1, -1, 0.7, 0.1, Color.GRAY);
+                Color.NAVAJOWHITE, true);
+        Celestial Uranus = factory.createOrbiting("Uranus", 4.36e-5, Sun, 19.2, 2.4,
+                Color.LIGHTCYAN, true);
+        Celestial Neptune = factory.createOrbiting("Neptune", 5.15e-5, Sun, 30.1, 2.8,
+                Color.DEEPSKYBLUE, true);
     }
 
     private void drawPlacement(GraphicsContext gc) {

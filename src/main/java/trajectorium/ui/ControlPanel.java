@@ -27,8 +27,11 @@ public class ControlPanel extends VBox {
     private final ComboBox<Integrator> integratorBox = new ComboBox<Integrator>(
             FXCollections.observableArrayList(new VerletIntegrator(), new EulerIntegrator())
     );
+    private final Button saveButton = new Button("Сохранить...");
+    private final Button openButton = new Button("Открыть...");
+    private final ComboBox<String> presetBox = new ComboBox<String>();
 
-    public ControlPanel(Simulation sim, CommandHistory history, Runnable onReset) {
+    public ControlPanel(Simulation sim, CommandHistory history, Runnable onReset, SceneFileController files) {
         super(10);
         this.sim = sim;
         this.history = history;
@@ -81,6 +84,26 @@ public class ControlPanel extends VBox {
             }
         });
 
+        presetBox.getItems().addAll(SceneFileController.PRESETS.stream()
+                .map(SceneFileController.Preset::title).toList());
+        presetBox.setPromptText("Пресет...");
+        presetBox.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "Пресет..." : item);
+            }
+        });
+        presetBox.setOnAction(e -> {
+            String title = presetBox.getValue();
+            if (title == null) return;
+            files.loadPreset(title);
+            presetBox.setValue(null);
+        });
+
+        saveButton.setOnAction(e -> files.save(getScene().getWindow()));
+        openButton.setOnAction(e -> files.load(getScene().getWindow()));
+
         help.setText("""
                 ЛКМ по телу: выбрать и следить
                 Зажать ЛКМ: перетаскивание камеры
@@ -90,6 +113,8 @@ public class ControlPanel extends VBox {
                  со скоростью
                 Пробел: пауза
                 Ctrl+Z / Ctrl+Y: отмена / повтор
+                Ctrl+S: сохранить сцену
+                Ctrl+O: открыть сцену
                 F: вписать все
                 0: масштаб по умолчанию
                 F11: полный экран
@@ -125,7 +150,8 @@ public class ControlPanel extends VBox {
             }
         });
 
-        for (Control c : List.of(pauseButton, resetButton, undoButton, redoButton, speedSlider, integratorBox)) {
+        for (Control c : List.of(pauseButton, resetButton, undoButton, redoButton, speedSlider, integratorBox,
+                saveButton, openButton, presetBox)) {
             c.setFocusTraversable(false);
         }
 
@@ -133,6 +159,7 @@ public class ControlPanel extends VBox {
                 new HBox(8, pauseButton, resetButton),
                 new HBox(8, undoButton, redoButton),
                 speedLabel, speedSlider, timeLabel, new Label("Метод интегрирования:"), integratorBox,
+                new HBox(8, saveButton, openButton), presetBox,
                 help);
     }
 

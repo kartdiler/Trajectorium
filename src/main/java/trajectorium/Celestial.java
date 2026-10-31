@@ -97,6 +97,12 @@ public class Celestial {
                              (yPos - yPrev) / dt + a[1] * dt / 2};
     }
 
+    public double[] getVelocity(double dt) {
+        double vx = (xPos - xPrev) / dt;
+        double vy = (yPos - yPrev) / dt;
+        return new double[]{vx, vy};
+    }
+
     public void setVelocity(double vx, double vy, List<Celestial> all, double dt) {
         double[] a = acceleration(this, all);
         xPrev = xPos - vx * dt + a[0] * dt * dt / 2;

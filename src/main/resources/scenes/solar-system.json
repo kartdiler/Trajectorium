@@ -1,0 +1,87 @@
+{
+  "version" : 1,
+  "integrator" : "Verlet",
+  "simulationSpeed" : 1.0,
+  "bodies" : [ {
+    "name" : "Sun",
+    "mass" : 1.0,
+    "x" : 0.0,
+    "y" : 0.0,
+    "vx" : 2.5722250397189688E-6,
+    "vy" : 0.0,
+    "canvasRadius" : 20.0,
+    "color" : "#FFFF00"
+  }, {
+    "name" : "Mercury",
+    "mass" : 1.66E-7,
+    "x" : 0.39,
+    "y" : 0.0,
+    "vx" : 4.090849056226364E-6,
+    "vy" : -10.061148632539163,
+    "canvasRadius" : 1.0,
+    "color" : "#808080"
+  }, {
+    "name" : "Venus",
+    "mass" : 2.45E-6,
+    "x" : 0.72,
+    "y" : 0.0,
+    "vx" : 4.877627443847232E-6,
+    "vy" : -7.40480489693061,
+    "canvasRadius" : 1.7,
+    "color" : "#FFFFE0"
+  }, {
+    "name" : "Earth",
+    "mass" : 3.003E-6,
+    "x" : 1.0,
+    "y" : 0.0,
+    "vx" : 3.212682533698663E-6,
+    "vy" : -6.283185307179586,
+    "canvasRadius" : 1.8,
+    "color" : "#0000FF"
+  }, {
+    "name" : "Mars",
+    "mass" : 3.23E-7,
+    "x" : 1.52,
+    "y" : 0.0,
+    "vx" : 4.062320035094769E-6,
+    "vy" : -5.096336248792996,
+    "canvasRadius" : 1.4,
+    "color" : "#CD5C5C"
+  }, {
+    "name" : "Jupiter",
+    "mass" : 9.55E-4,
+    "x" : 5.2,
+    "y" : 0.0,
+    "vx" : 8.371007106889802E-7,
+    "vy" : -2.7553590302269777,
+    "canvasRadius" : 3.0,
+    "color" : "#FF4500"
+  }, {
+    "name" : "Saturn",
+    "mass" : 2.86E-4,
+    "x" : 9.54,
+    "y" : 0.0,
+    "vx" : 3.183490164331785E-8,
+    "vy" : -2.0342563531448055,
+    "canvasRadius" : 2.6,
+    "color" : "#FFDEAD"
+  }, {
+    "name" : "Uranus",
+    "mass" : 4.36E-5,
+    "x" : 19.2,
+    "y" : 0.0,
+    "vx" : 2.342593196023022E-8,
+    "vy" : -1.433934302386369,
+    "canvasRadius" : 2.4,
+    "color" : "#E0FFFF"
+  }, {
+    "name" : "Neptune",
+    "mass" : 5.15E-5,
+    "x" : 30.1,
+    "y" : 0.0,
+    "vx" : -5.188215037709581E-13,
+    "vy" : -1.1452402960483612,
+    "canvasRadius" : 2.8,
+    "color" : "#00BFFF"
+  } ]
+}
