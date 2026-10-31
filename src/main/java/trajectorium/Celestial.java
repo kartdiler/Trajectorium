@@ -91,10 +91,16 @@ public class Celestial {
         return new double[]{xPrev, yPrev};
     }
 
-    public double[] getVelocity(double dt) {
-        double vx = (xPos - xPrev) / dt;
-        double vy = (yPos - yPrev) / dt;
-        return new double[] {vx, vy};
+    public double[] getVelocity(double dt, List<Celestial> all) {
+        double[] a = acceleration(this, all);
+        return new double[] {(xPos - xPrev) / dt + a[0] * dt / 2,
+                             (yPos - yPrev) / dt + a[1] * dt / 2};
+    }
+
+    public void setVelocity(double vx, double vy, List<Celestial> all, double dt) {
+        double[] a = acceleration(this, all);
+        xPrev = xPos - vx * dt + a[0] * dt * dt / 2;
+        yPrev = yPos - vy * dt + a[1] * dt * dt / 2;
     }
 
     public double getCanvasRadius() {
