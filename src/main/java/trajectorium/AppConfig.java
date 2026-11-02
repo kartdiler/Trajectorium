@@ -19,6 +19,7 @@ public class AppConfig {
     private final double stepDays;
     private final double simulationSpeed;
     private final int trailMaxPoints;
+    private final String language;
 
     public AppConfig(Properties p) {
         canvasWidth = readDouble(p, "canvas.width", 1200, 100, 10000);
@@ -27,6 +28,7 @@ public class AppConfig {
         stepDays = readDouble(p, "simulation.stepDays", 1, 0.001, 365);
         simulationSpeed = readDouble(p, "simulation.speed", 1.0, 0, 100);
         trailMaxPoints = (int) readDouble(p, "trail.maxPoints", 150, 0, 100000);
+        language = readLanguage(p, "app.language", "ru");
     }
 
     public static AppConfig load() {
@@ -62,6 +64,19 @@ public class AppConfig {
         }
     }
 
+    private static String readLanguage(Properties p, String key, String def) {
+        String raw = p.getProperty(key);
+        if (raw == null) {
+            return def;
+        }
+        String v = raw.trim().toLowerCase();
+        if (v.equals("ru") || v.equals("en")) {
+            return v;
+        }
+        log.warn("Неверное значение {}='{}', используется {}", key, raw, def);
+        return def;
+    }
+
     public double getCanvasWidth() {
         return canvasWidth;
     }
@@ -84,5 +99,9 @@ public class AppConfig {
 
     public int getTrailMaxPoints() {
         return trailMaxPoints;
+    }
+
+    public String getLanguage() {
+        return language;
     }
 }
