@@ -1,5 +1,7 @@
 package trajectorium.io;
 
+import trajectorium.i18n.I18n;
+
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -12,28 +14,28 @@ public final class SceneValidator {
 
     public static void validate(SceneData d) throws SceneFormatException {
         if (d == null) {
-            throw new SceneFormatException("Файл пуст");
+            throw new SceneFormatException(I18n.get("error.empty"));
         }
 
         if (d.version() != SceneData.CURRENT_VERSION) {
-            throw new SceneFormatException("Неподдерживаемая версия формата: " + d.version());
+            throw new SceneFormatException(I18n.format("error.version", d.version()));
         }
 
         if (!SceneMapper.isKnownIntegrator(d.integrator())) {
-            throw new SceneFormatException("Неизвестный интегратор: " + d.integrator());
+            throw new SceneFormatException(I18n.format("error.integrator", d.integrator()));
         }
 
         if (!inRange(d.simulationSpeed(), 0.1, 100)) {
-            throw new SceneFormatException("Скорость симуляции должна быть от 0,1 до 100");
+            throw new SceneFormatException(I18n.get("error.speed"));
         }
 
         List<BodyData> bodies = d.bodies();
         if (bodies == null) {
-            throw new SceneFormatException("Не задан список тел");
+            throw new SceneFormatException(I18n.get("error.bodies.missing"));
         }
 
         if (bodies.size() > MAX_BODIES) {
-            throw new SceneFormatException("Слишком много тел: " + bodies.size() + " (максимум " + MAX_BODIES + ")");
+            throw new SceneFormatException(I18n.format("error.bodies.many", bodies.size(), MAX_BODIES));
         }
 
         for (int i = 0; i < bodies.size(); i++) {
@@ -45,7 +47,7 @@ public final class SceneValidator {
                 BodyData a = bodies.get(i);
                 BodyData b = bodies.get(j);
                 if (Math.hypot(a.x() - b.x(), a.y() - b.y()) < 1e-9) {
-                    throw new SceneFormatException("Тела \"" + a.name() + "\" и \"" + b.name() + "\" находятся в одной точке");
+                    throw new SceneFormatException(I18n.format("error.samepoint", a.name(), b.name()));
                 }
             }
         }
@@ -53,30 +55,30 @@ public final class SceneValidator {
 
     private static void validateBody(int number, BodyData b) throws SceneFormatException {
         if (b == null) {
-            throw new SceneFormatException("Тело №" + number + " пустое");
+            throw new SceneFormatException(I18n.format("error.body.empty", number));
         }
 
         String where = "Тело №" + number + ": ";
         if (b.name() == null || b.name().isBlank() || b.name().length() > 50) {
-            throw new SceneFormatException(where + "имя должно содержать от 1 до 50 символов");
+            throw new SceneFormatException(I18n.format("error.body.name", number));
         }
 
         if (!(Double.isFinite(b.mass()) && b.mass() > 0 && b.mass() <= MAX_ABS)) {
-            throw new SceneFormatException(where + "масса должна быть положительным конечным числом");
+            throw new SceneFormatException(I18n.format("error.body.mass", number));
         }
 
         for (double v : new double[] {b.x(), b.y(), b.vx(), b.vy()}) {
             if (!inRange(v, -MAX_ABS, MAX_ABS)) {
-                throw new SceneFormatException(where + "координаты и скорость должны быть конечными числами");
+                throw new SceneFormatException(I18n.format("error.body.numbers", number));
             }
         }
 
         if (!(Double.isFinite(b.canvasRadius()) && b.canvasRadius() > 0 && b.canvasRadius() <= 100)) {
-            throw new SceneFormatException(where + "радиус должен быть в пределах (0; 100]");
+            throw new SceneFormatException(I18n.format("error.body.radius", number));
         }
 
         if (b.color() == null || !HEX_COLOR.matcher(b.color()).matches()) {
-            throw new SceneFormatException(where + "цвет должен быть в формате #RRGGBB");
+            throw new SceneFormatException(I18n.format("error.body.color", number));
         }
     }
 

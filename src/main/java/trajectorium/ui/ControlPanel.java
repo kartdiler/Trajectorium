@@ -1,5 +1,6 @@
 package trajectorium.ui;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
@@ -7,6 +8,7 @@ import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import trajectorium.*;
 import trajectorium.command.*;
+import trajectorium.i18n.I18n;
 
 import java.util.List;
 
@@ -16,20 +18,24 @@ public class ControlPanel extends VBox {
     private final Simulation sim;
     private final CommandHistory history;
 
-    private final Button pauseButton = new Button("Пауза");
-    private final Button resetButton = new Button("Сброс");
-    private final Button undoButton = new Button("Отменить");
-    private final Button redoButton = new Button("Повторить");
+    private final Button pauseButton = new Button();
+    private final Button resetButton = new Button();
+    private final Button undoButton = new Button();
+    private final Button redoButton = new Button();
+    private final Button saveButton = new Button();
+    private final Button openButton = new Button();
     private final Slider speedSlider = new Slider(0.1, 20, 1);
     private final Label speedLabel = new Label();
     private final Label timeLabel = new Label();
     private final Label help = new Label();
+    private final Label integratorLabel = new Label();
     private final ComboBox<Integrator> integratorBox = new ComboBox<Integrator>(
             FXCollections.observableArrayList(new VerletIntegrator(), new EulerIntegrator())
     );
-    private final Button saveButton = new Button("Сохранить...");
-    private final Button openButton = new Button("Открыть...");
     private final ComboBox<String> presetBox = new ComboBox<String>();
+    private final Label languageLabel = new Label();
+    private final ComboBox<String> languageBox = new ComboBox<String>(FXCollections
+            .observableArrayList("Русский", "English"));
 
     public ControlPanel(Simulation sim, CommandHistory history, Runnable onReset, SceneFileController files) {
         super(10);
@@ -38,32 +44,14 @@ public class ControlPanel extends VBox {
 
         setPrefWidth(240);
         setStyle("-fx-background-color: #222222; -fx-padding: 12;");
-        speedLabel.setStyle(WHITE_TEXT);
-        timeLabel.setStyle(WHITE_TEXT);
-        help.setStyle(WHITE_TEXT);
+        for (Label l : List.of(speedLabel, timeLabel, integratorLabel, languageLabel)) {
+            l.setStyle(WHITE_TEXT);
+        }
 
-        pauseButton.setText(sim.isRunning() ? "Пауза" : "Продолжить");
+        help.setStyle("-fx-text-fill: #aaaaaa;");
+        languageLabel.setText(I18n.get("control.language"));
+
         speedSlider.setValue(sim.getSimulationSpeed());
-        showSpeed(sim.getSimulationSpeed());
-        showTime(sim.getTime());
-        refreshHistoryButtons();
-
-        pauseButton.setOnAction(e ->
-                history.execute(new SetRunningCommand(sim, !sim.isRunning())));
-        resetButton.setOnAction(e -> {
-                history.execute(new ResetCommand(sim));
-                onReset.run();
-        });
-        undoButton.setOnAction(e -> history.undo());
-        redoButton.setOnAction(e -> history.redo());
-
-        speedSlider.valueProperty().addListener((obs, old, now) -> showSpeed(now.doubleValue()));
-        speedSlider.setOnMouseReleased(e -> {
-            double v = Math.round(speedSlider.getValue() * 10) / 10.0;
-            if (v != sim.getSimulationSpeed()) {
-                history.execute(new SetSpeedCommand(sim, v));
-            }
-        });
 
         integratorBox.setConverter(new StringConverter<Integrator>() {
             @Override
@@ -77,6 +65,36 @@ public class ControlPanel extends VBox {
             }
         });
         selectIntegrator(sim.getIntegrator());
+
+        languageBox.getSelectionModel().select(I18n.getLocale().getLanguage().equals("en") ? 1 : 0);
+
+        presetBox.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? I18n.get("control.preset.prompt") : item);
+            }
+        });
+
+        pauseButton.setOnAction(e ->
+                history.execute(new SetRunningCommand(sim, !sim.isRunning())));
+        resetButton.setOnAction(e -> {
+            history.execute(new ResetCommand(sim));
+            onReset.run();
+        });
+        undoButton.setOnAction(e -> history.undo());
+        redoButton.setOnAction(e -> history.redo());
+        saveButton.setOnAction(e -> files.save(getScene().getWindow()));
+        openButton.setOnAction(e -> files.load(getScene().getWindow()));
+
+        speedSlider.valueProperty().addListener((obs, old, now) -> showSpeed(now.doubleValue()));
+        speedSlider.setOnMouseReleased(e -> {
+            double v = Math.round(speedSlider.getValue() * 10) / 10.0;
+            if (v != sim.getSimulationSpeed()) {
+                history.execute(new SetSpeedCommand(sim, v));
+            }
+        });
+
         integratorBox.setOnAction(e -> {
             Integrator chosen = integratorBox.getValue();
             if (chosen != null && !chosen.getName().equals(sim.getIntegrator().getName())) {
@@ -84,41 +102,16 @@ public class ControlPanel extends VBox {
             }
         });
 
-        presetBox.getItems().addAll(SceneFileController.PRESETS.stream()
-                .map(SceneFileController.Preset::title).toList());
-        presetBox.setPromptText("Пресет...");
-        presetBox.setButtonCell(new ListCell<>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? "Пресет..." : item);
-            }
-        });
         presetBox.setOnAction(e -> {
-            String title = presetBox.getValue();
-            if (title == null) return;
-            files.loadPreset(title);
-            presetBox.setValue(null);
+            int index = presetBox.getSelectionModel().getSelectedIndex();
+            if (index < 0) return;
+            files.loadPreset(index);
+            Platform.runLater(() -> presetBox.getSelectionModel().clearSelection());
         });
 
-        saveButton.setOnAction(e -> files.save(getScene().getWindow()));
-        openButton.setOnAction(e -> files.load(getScene().getWindow()));
-
-        help.setText("""
-                ЛКМ по телу: выбрать и следить
-                Зажать ЛКМ: перетаскивание камеры
-                Колесо: масштаб
-                ПКМ: добавить тело
-                ПКМ + перетаскивание: добавить тело
-                 со скоростью
-                Пробел: пауза
-                Ctrl+Z / Ctrl+Y: отмена / повтор
-                Ctrl+S: сохранить сцену
-                Ctrl+O: открыть сцену
-                F: вписать все
-                0: масштаб по умолчанию
-                F11: полный экран
-                """);
+        languageBox.setOnAction(e -> {
+            I18n.setLocale(languageBox.getSelectionModel().getSelectedIndex() == 1 ? I18n.EN : I18n.RU);
+        });
 
         history.setOnChange(this::refreshHistoryButtons);
 
@@ -135,7 +128,7 @@ public class ControlPanel extends VBox {
 
             @Override
             public void onRunningChanged(boolean running) {
-                pauseButton.setText(running ? "Пауза" : "Продолжить");
+                pauseButton.setText(I18n.get(running ? "control.pause" : "control.resume"));
             }
 
             @Override
@@ -150,25 +143,48 @@ public class ControlPanel extends VBox {
             }
         });
 
+        I18n.addListener(this::updateTexts);
+
         for (Control c : List.of(pauseButton, resetButton, undoButton, redoButton, speedSlider, integratorBox,
-                saveButton, openButton, presetBox)) {
+                saveButton, openButton, presetBox, languageBox)) {
             c.setFocusTraversable(false);
         }
 
         getChildren().addAll(
                 new HBox(8, pauseButton, resetButton),
                 new HBox(8, undoButton, redoButton),
-                speedLabel, speedSlider, timeLabel, new Label("Метод интегрирования:"), integratorBox,
-                new HBox(8, saveButton, openButton), presetBox,
-                help);
+                new HBox(8, saveButton, openButton),
+                presetBox,
+                speedLabel, speedSlider, timeLabel,
+                integratorLabel, integratorBox,
+                help,
+                languageLabel, languageBox);
+
+        updateTexts();
+        refreshHistoryButtons();
+    }
+
+    private void updateTexts() {
+        resetButton.setText(I18n.get("control.reset"));
+        undoButton.setText(I18n.get("control.undo"));
+        redoButton.setText(I18n.get("control.redo"));
+        saveButton.setText(I18n.get("control.save"));
+        openButton.setText(I18n.get("control.open"));
+        pauseButton.setText(I18n.get(sim.isRunning() ? "control.pause" : "control.resume"));
+        integratorLabel.setText(I18n.get("control.integrator"));
+        help.setText(I18n.get("control.help"));
+        presetBox.setPromptText(I18n.get("control.preset.prompt"));
+        presetBox.getItems().setAll(SceneFileController.presetTitles());
+        showSpeed(sim.getSimulationSpeed());
+        showTime(sim.getTime());
     }
 
     private void showSpeed(double v) {
-        speedLabel.setText(String.format("Скорость: x%.1f", v));
+        speedLabel.setText(I18n.format("control.speed", v));
     }
 
     private void showTime(double years) {
-        timeLabel.setText(String.format("Время: %.0f дн", years * 365.25));
+        timeLabel.setText(I18n.format("control.time", years * 365.25));
     }
 
     private void refreshHistoryButtons() {

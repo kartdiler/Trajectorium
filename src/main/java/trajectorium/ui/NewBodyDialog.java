@@ -9,6 +9,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Window;
 import javafx.util.StringConverter;
 import trajectorium.CelestialFactory.MassUnit;
+import trajectorium.i18n.I18n;
 
 import java.util.List;
 import java.util.Locale;
@@ -24,10 +25,11 @@ public final class NewBodyDialog {
                                         String defaultName, String speedHint) {
         Dialog<Result> dialog = new Dialog<Result>();
         dialog.initOwner(owner);
-        dialog.setTitle("Новое тело");
-        dialog.setHeaderText(String.format("Позиция: x = %.3f, y = %.3f а.е.", x, y));
+        dialog.setTitle(I18n.get("dialog.new.title"));
+        dialog.setHeaderText(I18n.format("dialog.new.header", x, y));
 
-        ButtonType addType = new ButtonType("Добавить", ButtonBar.ButtonData.OK_DONE);
+        ButtonType addType = new ButtonType(I18n.get("dialog.new.add"), ButtonBar.ButtonData.OK_DONE);
+        ButtonType cancelType = new ButtonType(I18n.get("dialog.cancel"), ButtonBar.ButtonData.CANCEL_CLOSE);
         dialog.getDialogPane().getButtonTypes().addAll(addType, ButtonType.CANCEL);
 
         TextField name = new TextField(defaultName);
@@ -37,7 +39,7 @@ public final class NewBodyDialog {
         unit.setConverter(new StringConverter<MassUnit>() {
             @Override
             public String toString(MassUnit massUnit) {
-                return unitLabel(massUnit);
+                return massUnit == null ? "" : unitLabel(massUnit);
             }
 
             @Override
@@ -55,12 +57,12 @@ public final class NewBodyDialog {
         grid.setHgap(10);
         grid.setVgap(8);
         grid.setPadding(new Insets(12));
-        grid.addRow(0, new Label("Имя"), name);
-        grid.addRow(1, new Label("Масса"), mass, unit);
-        grid.addRow(2, new Label("Скорость по x, а.е./год"), vx);
-        grid.addRow(3, new Label("Скорость по y, а.е./год"), vy);
-        grid.addRow(4, new Label("Радиус на экране, px"), radius);
-        grid.addRow(5, new Label("Цвет"), color);
+        grid.addRow(0, new Label(I18n.get("dialog.new.name")), name);
+        grid.addRow(1, new Label(I18n.get("dialog.new.mass")), mass, unit);
+        grid.addRow(2, new Label(I18n.get("dialog.new.vx")), vx);
+        grid.addRow(3, new Label(I18n.get("dialog.new.vy")), vy);
+        grid.addRow(4, new Label(I18n.get("dialog.new.radius")), radius);
+        grid.addRow(5, new Label(I18n.get("dialog.new.color")), color);
 
         if (!speedHint.isEmpty()) {
             grid.add(new Label(speedHint), 0, 6, 3, 1);
@@ -111,9 +113,9 @@ public final class NewBodyDialog {
 
     private static String unitLabel(MassUnit u) {
         return switch (u) {
-            case SOLAR_MASSES -> "М Солнца";
-            case EARTH_MASSES -> "М Земли";
-            case KILOGRAMS -> "кг";
+            case SOLAR_MASSES -> I18n.get("unit.solar");
+            case EARTH_MASSES -> I18n.get("unit.earth");
+            case KILOGRAMS -> I18n.get("unit.kg");
         };
     }
 

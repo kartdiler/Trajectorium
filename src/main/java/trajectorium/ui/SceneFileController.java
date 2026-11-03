@@ -1,8 +1,6 @@
 package trajectorium.ui;
 
-import javafx.scene.control.Alert;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.*;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
@@ -12,6 +10,7 @@ import trajectorium.CelestialFactory;
 import trajectorium.Simulation;
 import trajectorium.command.CommandHistory;
 import trajectorium.command.LoadSceneCommand;
+import trajectorium.i18n.I18n;
 import trajectorium.io.SceneData;
 import trajectorium.io.SceneFormatException;
 import trajectorium.io.SceneMapper;
@@ -24,12 +23,16 @@ import java.io.StringWriter;
 import java.util.List;
 
 public class SceneFileController {
-    public record Preset(String title, String resource) {}
+    public record Preset(String titleKey, String resource) {}
 
     public static final List<Preset> PRESETS = List.of(
-            new Preset("Солнечная система", "/scenes/solar-system.json"),
-            new Preset("Двойная звезда", "/scenes/binary-star.json")
+            new Preset("preset.solar", "/scenes/solar-system.json"),
+            new Preset("preset.binary", "/scenes/binary-star.json")
     );
+
+    public static List<String> presetTitles() {
+        return PRESETS.stream().map(p -> I18n.get(p.titleKey())).toList();
+    }
 
     private static final Logger log = LoggerFactory.getLogger(SceneFileController.class);
 
@@ -46,7 +49,7 @@ public class SceneFileController {
 
     public void save(Window owner) {
         runPaused(() -> {
-            FileChooser chooser = chooser("Сохранить сцену");
+            FileChooser chooser = chooser(I18n.get("file.save.title"));
             chooser.setInitialFileName("scene.json");
             File file = chooser.showSaveDialog(owner);
             if (file == null) return;
@@ -58,14 +61,14 @@ public class SceneFileController {
                 SceneStorage.save(file.toPath(), SceneMapper.capture(sim));
                 log.info("Сцена сохранена: {}", file);
             } catch (IOException | SceneFormatException e) {
-                fail("Не удалось сохранить сцену", e);
+                fail(I18n.get("file.error.save"), e);
             }
         });
     }
 
     public void load(Window owner) {
         runPaused(() -> {
-            File file = chooser("Открыть сцену").showOpenDialog(owner);
+            File file = chooser(I18n.get("file.open.title")).showOpenDialog(owner);
             if (file == null) {
                 return;
             }
@@ -76,21 +79,20 @@ public class SceneFileController {
                 history.execute(new LoadSceneCommand(sim, factory, data));
                 log.info("Сцена загружена: {}", file);
             } catch (IOException | SceneFormatException e) {
-                fail("Не удалось открыть сцену", e);
+                fail(I18n.get("file.error.open"), e);
             }
         });
     }
 
-    public void loadPreset(String title) {
-        for (Preset p : PRESETS) {
-            if (!p.title().equals(title)) continue;
-            try {
-                history.execute(new LoadSceneCommand(sim, factory, SceneStorage.loadResource(p.resource())));
-                log.info("Загружен пресет: {}", title);
-            } catch (IOException | SceneFormatException e) {
-                fail("Не удалось загрузить пресет \"" + title + "\"", e);
-            }
-            return;
+    public void loadPreset(int index) {
+        if (index < 0 || index >= PRESETS.size()) return;
+        Preset p = PRESETS.get(index);
+        String title = I18n.get(p.titleKey());
+        try {
+            history.execute(new LoadSceneCommand(sim, factory, SceneStorage.loadResource(p.resource())));
+            log.info("Загружен пресет: {}", title);
+        } catch (IOException | SceneFormatException e) {
+            fail(I18n.format("file.error.preset", title), e);
         }
     }
 
@@ -112,7 +114,7 @@ public class SceneFileController {
     private FileChooser chooser(String title) {
         FileChooser chooser = new FileChooser();
         chooser.setTitle(title);
-        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Сцены Trajectorium (*.json)", "*.json"));
+        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(I18n.get("file.filter"), "*.json"));
         if (lastDirectory != null && lastDirectory.isDirectory()) {
             chooser.setInitialDirectory(lastDirectory);
         }
@@ -122,7 +124,8 @@ public class SceneFileController {
 
     private void fail(String header, Exception e) {
         log.error(header, e);
-        Alert alert = new Alert(Alert.AlertType.ERROR);
+        Alert alert = new Alert(Alert.AlertType.ERROR, "",
+                new ButtonType(I18n.get("dialog.ok"), ButtonBar.ButtonData.OK_DONE));
         alert.setTitle("Trajectorium");
         alert.setHeaderText(header);
 

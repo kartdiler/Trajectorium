@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import trajectorium.i18n.I18n;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,7 +27,7 @@ public final class SceneStorage {
 
     public static SceneData load(Path file) throws IOException, SceneFormatException {
         if (Files.size(file) > MAX_FILE_BYTES) {
-            throw new SceneFormatException("Файл слишком большой (больше 5 МБ)");
+            throw new SceneFormatException(I18n.get("error.file.large"));
         } try (InputStream in = Files.newInputStream(file)) {
             return parse(in);
         }
@@ -35,7 +36,7 @@ public final class SceneStorage {
     public static SceneData loadResource(String path) throws IOException, SceneFormatException {
         try (InputStream in = SceneStorage.class.getResourceAsStream(path)) {
             if (in == null) {
-                throw new IOException("Ресурс не найден: " + path);
+                throw new IOException(I18n.format("error.resource.missing", path));
             }
             return parse(in);
         }
@@ -47,9 +48,9 @@ public final class SceneStorage {
             data = MAPPER.readValue(in, SceneData.class);
         } catch (JsonProcessingException e) {
             JsonLocation loc = e.getLocation();
-            String where = (loc == null || loc.getLineNr() < 0) ? "" : " (строка " + loc.getLineNr() +
-                    ", столбец " + loc.getColumnNr() + ")";
-            throw new SceneFormatException("Файл поврежден или имеет неверный формат" + where, e);
+            String message = (loc == null || loc.getLineNr() < 0) ? I18n.get("error.file.broken")
+                    : I18n.format("error.file.broken.at", loc.getLineNr(), loc.getColumnNr());
+            throw new SceneFormatException(message, e);
         }
 
         SceneValidator.validate(data);

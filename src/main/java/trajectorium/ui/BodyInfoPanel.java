@@ -9,6 +9,7 @@ import trajectorium.Simulation;
 import trajectorium.SimulationListener;
 import trajectorium.command.CommandHistory;
 import trajectorium.command.RemoveBodyCommand;
+import trajectorium.i18n.I18n;
 
 public class BodyInfoPanel extends VBox {
     private final Simulation sim;
@@ -17,7 +18,7 @@ public class BodyInfoPanel extends VBox {
     private final Label position = new Label();
     private final Label speed = new Label();
     private final Label reference = new Label();
-    private final Button deleteButton = new Button("Удалить тело");
+    private final Button deleteButton = new Button();
     private Celestial body;
 
     public BodyInfoPanel(Simulation sim, CommandHistory history) {
@@ -46,6 +47,8 @@ public class BodyInfoPanel extends VBox {
             }
         });
 
+        I18n.addListener(this::refresh);
+
         getChildren().addAll(title, mass, position, speed, reference, deleteButton);
         refresh();
     }
@@ -57,7 +60,7 @@ public class BodyInfoPanel extends VBox {
 
     private void refresh() {
         if (body == null) {
-            title.setText("Тело не выбрано");
+            title.setText(I18n.get("info.none"));
             mass.setText("");
             speed.setText("");
             position.setText("");
@@ -70,10 +73,10 @@ public class BodyInfoPanel extends VBox {
         double earthMasses = info.mass() / MassUnit.EARTH_MASSES.toSolarMasses(1.0);
 
         title.setText(info.name());
-        mass.setText(String.format("Масса: %.3e M Солнц (%.3g M Земли)", info.mass(), earthMasses));
-        position.setText(String.format("Позиция: %.3f; %.3f а.е.", info.x(), info.y()));
-        speed.setText(String.format("Скорость: %.3f а.е./год (%.2f км/с)", info.speedAuYear(), info.speedKmS()));
-        reference.setText(info.refName() == null ? "" : String.format("До %s: %.3f а.е.", info.refName(), info.refDistance()));
+        mass.setText(I18n.format("info.mass", info.mass(), earthMasses));
+        position.setText(I18n.format("info.position", info.x(), info.y()));
+        speed.setText(I18n.format("info.speed", info.speedAuYear(), info.speedKmS()));
+        reference.setText(info.refName() == null ? "" : I18n.format("info.reference", info.refName(), info.refDistance()));
 
         deleteButton.setDisable(false);
     }
