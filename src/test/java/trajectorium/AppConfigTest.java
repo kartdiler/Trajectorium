@@ -37,4 +37,17 @@ public class AppConfigTest {
         assertEquals(100, c.getScale(), 1e-12);
         assertEquals(1200, c.getCanvasWidth(), 1e-12);
     }
+
+    @Test
+    void languageDefaultsToRussianAndRejectsUnknownValues() {
+        assertEquals("ru", new AppConfig(new Properties()).getLanguage());
+
+        Properties english = new Properties();
+        english.setProperty("app.language", "en");
+        assertEquals("en", new AppConfig(english).getLanguage());
+
+        Properties unknown = new Properties();
+        unknown.setProperty("app.language", "xx");
+        assertEquals("ru", new AppConfig(unknown).getLanguage());
+    }
 }

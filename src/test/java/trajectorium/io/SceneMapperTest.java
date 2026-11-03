@@ -6,6 +6,7 @@ import org.junit.jupiter.api.io.TempDir;
 import trajectorium.Celestial;
 import trajectorium.CelestialFactory;
 import trajectorium.Simulation;
+import trajectorium.i18n.I18n;
 
 import java.io.File;
 import java.io.IOException;
@@ -157,5 +158,16 @@ public class SceneMapperTest {
             many[i] = body("B" + i, 1, i * 10.0);
         }
         assertThrows(SceneFormatException.class, () -> SceneValidator.validate(scene(many)));
+    }
+
+    @Test
+    void validationMessagesFollowTheLanguage() {
+        I18n.setLocale(I18n.EN);
+        try {
+            SceneFormatException e = assertThrows(SceneFormatException.class,
+                    () -> SceneValidator.validate(scene(body("A", 0, 0))));
+        } finally {
+            I18n.setLocale(I18n.RU);
+        }
     }
 }
