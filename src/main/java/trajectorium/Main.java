@@ -16,9 +16,11 @@ import javafx.stage.Window;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import trajectorium.command.*;
+import trajectorium.i18n.I18n;
 import trajectorium.ui.*;
 
 import java.util.List;
+import java.util.Locale;
 
 public class Main extends Application {
     public static void main() {
@@ -55,6 +57,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) {
+        I18n.setLocale(Locale.forLanguageTag(config.getLanguage()));
         simulation.setSimulationSpeed(config.getSimulationSpeed());
         factory.setTrailMaxPoints(config.getTrailMaxPoints());
         log.info("Запуск Trajectorium: масштаб {}, шаг {} года", config.getScale(), simulation.getDt());
@@ -308,27 +311,27 @@ public class Main extends Application {
 
         double[] p = heaviest.getPos();
         double r = Math.hypot(x - p[0], y - p[1]);
-        return String.format("Круговая скорость вокруг %s: %.3f а.е./год",
+        return I18n.format("hint.circular",
                 heaviest.getName(), CelestialFactory.circularVelocity(heaviest.getMass(), r));
     }
 
     private void buildDefaultScene() {
-        Celestial Sun = factory.createStar("Sun", 1, 0, 0, 20, Color.YELLOW);
-        Celestial Mercury = factory.createOrbiting("Mercury", 1.66e-7, Sun, 0.39, 1,
+        Celestial Sun = factory.createStar(I18n.get("body.sun"), 1, 0, 0, 20, Color.YELLOW);
+        Celestial Mercury = factory.createOrbiting(I18n.get("body.mercury"), 1.66e-7, Sun, 0.39, 1,
                 Color.GRAY, true);
-        Celestial Venus = factory.createOrbiting("Venus", 2.45e-6, Sun, 0.72, 1.7,
+        Celestial Venus = factory.createOrbiting(I18n.get("body.venus"), 2.45e-6, Sun, 0.72, 1.7,
                 Color.LIGHTYELLOW, true);
-        Celestial Earth = factory.createOrbiting("Earth", 3.003e-6, Sun, 1, 1.8,
+        Celestial Earth = factory.createOrbiting(I18n.get("body.earth"), 3.003e-6, Sun, 1, 1.8,
                 Color.BLUE, true);
-        Celestial Mars = factory.createOrbiting("Mars", 3.23e-7, Sun, 1.52, 1.4,
+        Celestial Mars = factory.createOrbiting(I18n.get("body.mars"), 3.23e-7, Sun, 1.52, 1.4,
                 Color.INDIANRED, true);
-        Celestial Jupiter = factory.createOrbiting("Jupiter", 9.55e-4, Sun, 5.2, 3,
+        Celestial Jupiter = factory.createOrbiting(I18n.get("body.jupiter"), 9.55e-4, Sun, 5.2, 3,
                 Color.ORANGERED, true);
-        Celestial Saturn = factory.createOrbiting("Saturn", 2.86e-4, Sun, 9.54, 2.6,
+        Celestial Saturn = factory.createOrbiting(I18n.get("body.saturn"), 2.86e-4, Sun, 9.54, 2.6,
                 Color.NAVAJOWHITE, true);
-        Celestial Uranus = factory.createOrbiting("Uranus", 4.36e-5, Sun, 19.2, 2.4,
+        Celestial Uranus = factory.createOrbiting(I18n.get("body.uranus"), 4.36e-5, Sun, 19.2, 2.4,
                 Color.LIGHTCYAN, true);
-        Celestial Neptune = factory.createOrbiting("Neptune", 5.15e-5, Sun, 30.1, 2.8,
+        Celestial Neptune = factory.createOrbiting(I18n.get("body.neptune"), 5.15e-5, Sun, 30.1, 2.8,
                 Color.DEEPSKYBLUE, true);
     }
 
@@ -357,7 +360,7 @@ public class Main extends Application {
 
         double[] v = DragVelocity.velocity(placeX, placeY, placeEndX, placeEndY);
         double speed = Math.hypot(v[0], v[1]);
-        gc.fillText(String.format("v = %.2f а.е./год (%.1f км/с)", speed, speed * BodyInfo.AU_YEAR_TO_KM_S),
+        gc.fillText(I18n.format("placement.speed", speed, speed * BodyInfo.AU_YEAR_TO_KM_S),
                 ex + 12, ey - 8);
         gc.setLineWidth(1);
     }
@@ -400,7 +403,7 @@ public class Main extends Application {
     }
 
     private void showNewBodyDialog(Window owner, double x, double y, double vx, double vy) {
-        NewBodyDialog.show(owner, x, y, vx, vy, "Тело " + (bodyCounter + 1), speedHint(x, y))
+        NewBodyDialog.show(owner, x, y, vx, vy, I18n.format("body.default", bodyCounter + 1), speedHint(x, y))
                 .ifPresent(d -> {
                     history.execute(new AddBodyCommand(simulation, () ->
                             factory.createFree(d.name(), d.mass(), d.unit(), x, y,

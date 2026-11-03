@@ -59,6 +59,8 @@ public class BodyInfoPanel extends VBox {
     }
 
     private void refresh() {
+        deleteButton.setText(I18n.get("info.delete"));
+
         if (body == null) {
             title.setText(I18n.get("info.none"));
             mass.setText("");
