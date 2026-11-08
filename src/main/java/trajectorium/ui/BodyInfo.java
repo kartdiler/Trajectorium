@@ -2,11 +2,12 @@ package trajectorium.ui;
 
 import trajectorium.Celestial;
 import trajectorium.Simulation;
+import trajectorium.Units;
 
 public record BodyInfo(String name, double mass, double x, double y,
                        double speedAuYear, double speedKmS, String refName,
                        double refDistance) {
-    public static final double AU_YEAR_TO_KM_S = 4.74047;
+    public static final double AU_YEAR_TO_KM_S = Units.AU_YEAR_TO_KM_S;
 
     public static BodyInfo of(Celestial body, Simulation sim) {
         double[] p = body.getPos();

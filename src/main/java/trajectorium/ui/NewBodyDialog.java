@@ -30,7 +30,7 @@ public final class NewBodyDialog {
 
         ButtonType addType = new ButtonType(I18n.get("dialog.new.add"), ButtonBar.ButtonData.OK_DONE);
         ButtonType cancelType = new ButtonType(I18n.get("dialog.cancel"), ButtonBar.ButtonData.CANCEL_CLOSE);
-        dialog.getDialogPane().getButtonTypes().addAll(addType, ButtonType.CANCEL);
+        dialog.getDialogPane().getButtonTypes().addAll(addType, cancelType);
 
         TextField name = new TextField(defaultName);
         TextField mass = new TextField("1");

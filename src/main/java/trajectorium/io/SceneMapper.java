@@ -49,7 +49,7 @@ public final class SceneMapper {
         sim.setSimulationSpeed(data.simulationSpeed());
     }
 
-    static String toHex(Color c) {
+    public static String toHex(Color c) {
         return String.format("#%02X%02X%02X",
                 (int) Math.round(c.getRed() * 255),
                 (int) Math.round(c.getGreen() * 255),
