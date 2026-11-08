@@ -9,7 +9,7 @@ public record ReportData(LocalDateTime generatedAt, String integrator, double ti
                           double vx, double vy, double speed, double speedKmS, double radiusPx,
                           String color) {}
 
-    public record Summary(int bodyCount, double totalMass, String heaviesName, double heaviestShare,
+    public record Summary(int bodyCount, double totalMass, String heaviestName, double heaviestShare,
                           double minSpeed, double averageSpeed, double maxSpeed, double centerOfMassX,
                           double centerOfMassY, double totalEnergy, double angularMomentum, ClosestPair closestPair) {}
 
