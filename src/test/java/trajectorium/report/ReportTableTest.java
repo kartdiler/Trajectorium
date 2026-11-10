@@ -37,4 +37,11 @@ public class ReportTableTest {
                 0,null), List.of());
         assertEquals(16, ReportTables.summaryItems(empty).size());
     }
+
+    @Test
+    void compactColumnsOmitVelocityComponentsAndRadius() {
+        assertEquals(8, ReportTables.compactBodyColumns().size());
+        assertTrue(ReportTables.compactBodyColumns().stream()
+                .noneMatch(c -> c.labelKey().equals("report.col.vx") || c.labelKey().equals("report.col.radius")));
+    }
 }

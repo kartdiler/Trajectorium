@@ -159,7 +159,7 @@ public class WordReportRenderer implements ReportRenderer {
                     new Content(ReportTables.format(Kind.SCIENTIFIC, c.totalMass(), locale), ParagraphAlignment.RIGHT, null),
                     new Content(ReportTables.format(Kind.DECIMAL, c.averageSpeed(), locale), ParagraphAlignment.RIGHT, null)));
         }
-        table(doc, List.of(I18n.get("report.classes.class"), I18n.get("report.class.count"),
+        table(doc, List.of(I18n.get("report.classes.class"), I18n.get("report.classes.count"),
                 I18n.get("report.classes.mass"), I18n.get("report.classes.speed")), rows, 10);
         caption(doc, I18n.get("report.word.caption.classes"));
     }
