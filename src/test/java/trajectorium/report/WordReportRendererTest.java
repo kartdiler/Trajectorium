@@ -9,6 +9,9 @@ import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblPr;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STJcTable;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STTblWidth;
 import trajectorium.Simulation;
 import trajectorium.i18n.I18n;
 import trajectorium.report.ReportTables.Column;
@@ -17,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -178,5 +182,20 @@ public class WordReportRendererTest {
             new WordReportRenderer(ReportFixtures.pngImage()).render(ReportFixtures.sampleReport(), out);
         }
         assertTrue(Files.size(file) > 0);
+    }
+
+    @Test
+    void tablesAreCenteredAndWidthIsInPercentOfTextWidth() throws IOException {
+        try (XWPFDocument doc = render(ReportFixtures.sampleReport(), null)) {
+            List<XWPFTable> tables = doc.getTables();
+            int[] expectedPercent = {100, 70, 80};
+
+            for (int i = 0; i < tables.size(); i++) {
+                CTTblPr properties = tables.get(i).getCTTbl().getTblPr();
+                assertEquals(STTblWidth.PCT, properties.getTblW().getType(), "единица ширины таблицы " + i);
+                assertEquals(BigInteger.valueOf(expectedPercent[i] * 50L), properties.getTblW().getW());
+                assertEquals(STJcTable.CENTER, properties.getJc().getVal());
+            }
+        }
     }
 }

@@ -3,10 +3,13 @@ package trajectorium.report;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.util.Units;
 import org.apache.poi.xwpf.usermodel.*;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.*;
 import trajectorium.i18n.I18n;
 import trajectorium.report.ReportTables.Kind;
 import trajectorium.report.ReportTables.Column;
 import trajectorium.report.ReportTables.Item;
+
+import java.math.BigInteger;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -130,7 +133,7 @@ public class WordReportRenderer implements ReportRenderer {
             }
             rows.add(row);
         }
-        table(doc, headers, rows, 8);
+        table(doc, headers, rows, 8, 100);
         caption(doc, I18n.get("report.word.caption.bodies"));
     }
 
@@ -143,7 +146,7 @@ public class WordReportRenderer implements ReportRenderer {
                     new Content(I18n.get(item.labelKey()), ParagraphAlignment.LEFT, null),
                     new Content(ReportTables.format(item.kind(), item.value(), locale), ParagraphAlignment.RIGHT, null)));
         }
-        table(doc, List.of(I18n.get("report.sum.indicator"), I18n.get("report.sum.value")), rows, 10);
+        table(doc, List.of(I18n.get("report.sum.indicator"), I18n.get("report.sum.value")), rows, 10, 70);
         caption(doc, I18n.get("report.word.caption.summary"));
     }
 
@@ -160,7 +163,7 @@ public class WordReportRenderer implements ReportRenderer {
                     new Content(ReportTables.format(Kind.DECIMAL, c.averageSpeed(), locale), ParagraphAlignment.RIGHT, null)));
         }
         table(doc, List.of(I18n.get("report.classes.class"), I18n.get("report.classes.count"),
-                I18n.get("report.classes.mass"), I18n.get("report.classes.speed")), rows, 10);
+                I18n.get("report.classes.mass"), I18n.get("report.classes.speed")), rows, 10, 80);
         caption(doc, I18n.get("report.word.caption.classes"));
     }
 
@@ -172,10 +175,10 @@ public class WordReportRenderer implements ReportRenderer {
         };
     }
 
-    private static void table(XWPFDocument doc, List<String> headers, List<List<Content>> rows, int fontSize) {
+    private static void table(XWPFDocument doc, List<String> headers, List<List<Content>> rows, int fontSize, int widthPercent) {
         XWPFTable table = doc.createTable(rows.size() + 1, headers.size());
-        table.setWidthType(TableWidthType.PCT);
-        table.setWidth(5000);
+        setWidthPercent(table, widthPercent);
+        centerTable(table);
         table.setTopBorder(XWPFTable.XWPFBorderType.SINGLE, 4, 0, BORDER_COLOR);
         table.setBottomBorder(XWPFTable.XWPFBorderType.SINGLE, 4, 0, BORDER_COLOR);
         table.setLeftBorder(XWPFTable.XWPFBorderType.SINGLE, 4, 0, BORDER_COLOR);
@@ -204,6 +207,25 @@ public class WordReportRenderer implements ReportRenderer {
                 write(cell, content.text(), content.align(), false, fontSize, textColor);
             }
         }
+    }
+
+    private static CTTblPr properties(XWPFTable table) {
+        CTTbl ctTable = table.getCTTbl();
+        CTTblPr properties = ctTable.getTblPr();
+        return properties != null ? properties : ctTable.addNewTblPr();
+    }
+
+    private static void setWidthPercent(XWPFTable table, int percent) {
+        CTTblPr properties = properties(table);
+        CTTblWidth width = properties.isSetTblW() ? properties.getTblW() : properties.addNewTblW();
+        width.setType(STTblWidth.PCT);
+        width.setW(BigInteger.valueOf(percent * 50L));
+    }
+
+    private static void centerTable(XWPFTable table) {
+        CTTblPr properties = properties(table);
+        CTJcTable alignment = properties.isSetJc() ? properties.getJc() : properties.addNewJc();
+        alignment.setVal(STJcTable.CENTER);
     }
 
     private static void write(XWPFTableCell cell, String text, ParagraphAlignment align,
