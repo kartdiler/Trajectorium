@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.function.Function;
 
 public final class ReportTables {
@@ -19,6 +20,7 @@ public final class ReportTables {
     public record Item(String labelKey, Kind kind, Object value) {}
 
     private static final String DASH = "—";
+    private static final Set<String> WIDE_ONLY = Set.of("report.col.vx", "report.col.vy", "report.col.radius");
 
     public static List<Column> bodyColumns() {
         return List.of(
@@ -33,6 +35,10 @@ public final class ReportTables {
                 new Column("report.col.speedkms", Kind.DECIMAL, 14, ReportData.BodyRow::speedKmS),
                 new Column("report.col.radius", Kind.DECIMAL, 11, ReportData.BodyRow::radiusPx),
                 new Column("report.col.color", Kind.COLOR, 11, ReportData.BodyRow::color));
+    }
+
+    public static List<Column> compactBodyColumns() {
+        return bodyColumns().stream().filter(c -> !WIDE_ONLY.contains(c.labelKey())).toList();
     }
 
     public static List<Item> summaryItems(ReportData d) {
