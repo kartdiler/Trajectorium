@@ -69,7 +69,9 @@ public class Main extends Application {
         canvas.widthProperty().bind(canvasHolder.widthProperty());
         canvas.heightProperty().bind(canvasHolder.heightProperty());
 
-        ControlPanel controlPanel = new ControlPanel(simulation, history, this::buildDefaultScene, files);
+        ReportFileController reports = new ReportFileController(simulation, () -> CanvasSnapshot.png(canvas));
+
+        ControlPanel controlPanel = new ControlPanel(simulation, history, this::buildDefaultScene, files, reports);
         infoPanel = new BodyInfoPanel(simulation, history);
         VBox sideBar = new VBox(controlPanel, infoPanel);
         sideBar.setStyle("-fx-background-color: #222222");

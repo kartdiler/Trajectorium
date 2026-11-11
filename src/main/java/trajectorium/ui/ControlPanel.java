@@ -24,6 +24,9 @@ public class ControlPanel extends VBox {
     private final Button redoButton = new Button();
     private final Button saveButton = new Button();
     private final Button openButton = new Button();
+    private final MenuButton exportButton = new MenuButton();
+    private final MenuItem exportExcelItem = new MenuItem();
+    private final MenuItem exportWordItem = new MenuItem();
     private final Slider speedSlider = new Slider(0.1, 20, 1);
     private final Label speedLabel = new Label();
     private final Label timeLabel = new Label();
@@ -37,7 +40,8 @@ public class ControlPanel extends VBox {
     private final ComboBox<String> languageBox = new ComboBox<String>(FXCollections
             .observableArrayList("Русский", "English"));
 
-    public ControlPanel(Simulation sim, CommandHistory history, Runnable onReset, SceneFileController files) {
+    public ControlPanel(Simulation sim, CommandHistory history, Runnable onReset, SceneFileController files,
+                        ReportFileController reports) {
         super(10);
         this.sim = sim;
         this.history = history;
@@ -113,6 +117,10 @@ public class ControlPanel extends VBox {
             I18n.setLocale(languageBox.getSelectionModel().getSelectedIndex() == 1 ? I18n.EN : I18n.RU);
         });
 
+        exportButton.getItems().addAll(exportExcelItem, exportWordItem);
+        exportExcelItem.setOnAction(e -> reports.exportExcel(getScene().getWindow()));
+        exportWordItem.setOnAction(e -> reports.exportWord(getScene().getWindow()));
+
         history.setOnChange(this::refreshHistoryButtons);
 
         sim.addListener(new SimulationListener() {
@@ -146,7 +154,7 @@ public class ControlPanel extends VBox {
         I18n.addListener(this::updateTexts);
 
         for (Control c : List.of(pauseButton, resetButton, undoButton, redoButton, speedSlider, integratorBox,
-                saveButton, openButton, presetBox, languageBox)) {
+                saveButton, openButton, presetBox, languageBox, exportButton)) {
             c.setFocusTraversable(false);
         }
 
@@ -154,6 +162,7 @@ public class ControlPanel extends VBox {
                 new HBox(8, pauseButton, resetButton),
                 new HBox(8, undoButton, redoButton),
                 new HBox(8, saveButton, openButton),
+                exportButton,
                 presetBox,
                 speedLabel, speedSlider, timeLabel,
                 integratorLabel, integratorBox,
@@ -171,6 +180,9 @@ public class ControlPanel extends VBox {
         saveButton.setText(I18n.get("control.save"));
         openButton.setText(I18n.get("control.open"));
         pauseButton.setText(I18n.get(sim.isRunning() ? "control.pause" : "control.resume"));
+        exportButton.setText(I18n.get("control.export"));
+        exportExcelItem.setText(I18n.get("control.export.excel"));
+        exportWordItem.setText(I18n.get("control.export.word"));
         integratorLabel.setText(I18n.get("control.integrator"));
         help.setText(I18n.get("control.help"));
         presetBox.setPromptText(I18n.get("control.preset.prompt"));
