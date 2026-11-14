@@ -10,6 +10,7 @@ import javafx.stage.Window;
 import javafx.util.StringConverter;
 import trajectorium.CelestialFactory.MassUnit;
 import trajectorium.i18n.I18n;
+import trajectorium.text.QuantityParser;
 
 import java.util.List;
 import java.util.Locale;
@@ -68,14 +69,18 @@ public final class NewBodyDialog {
             grid.add(new Label(speedHint), 0, 6, 3, 1);
         }
 
+        Label formats = new Label(I18n.get("dialog.new.hint"));
+        formats.setStyle("-fx-text-fill: gray;");
+        grid.add(formats, 0, 7, 3, 1);
+
         dialog.getDialogPane().setContent(grid);
 
         Node addButton = dialog.getDialogPane().lookupButton(addType);
         Runnable validate = () -> {
             boolean nameOk = InputParser.isValidName(name.getText());
-            boolean massOk = InputParser.parsePositive(mass.getText()).isPresent();
-            boolean vxOk = InputParser.parseNumber(vx.getText()).isPresent();
-            boolean vyOk = InputParser.parseNumber(vy.getText()).isPresent();
+            boolean massOk = QuantityParser.parseMass(mass.getText()).isPresent();
+            boolean vxOk = QuantityParser.parseVelocity(vx.getText()).isPresent();
+            boolean vyOk = QuantityParser.parseVelocity(vy.getText()).isPresent();
             mark(name, nameOk);
             mark(mass, massOk);
             mark(vx, vxOk);
@@ -93,12 +98,13 @@ public final class NewBodyDialog {
                 return null;
             }
 
+            QuantityParser.Mass m = QuantityParser.parseMass(mass.getText()).orElseThrow();
             return new Result(
                     name.getText().trim(),
-                    InputParser.parsePositive(mass.getText()).getAsDouble(),
-                    unit.getValue(),
-                    InputParser.parseNumber(vx.getText()).getAsDouble(),
-                    InputParser.parseNumber(vy.getText()).getAsDouble(),
+                    m.value(),
+                    m.unit() != null ? m.unit() : unit.getValue(),
+                    QuantityParser.parseVelocity(vx.getText()).getAsDouble(),
+                    QuantityParser.parseVelocity(vy.getText()).getAsDouble(),
                     radius.getValue(),
                     color.getValue()
             );
