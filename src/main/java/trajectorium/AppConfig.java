@@ -20,6 +20,7 @@ public class AppConfig {
     private final double simulationSpeed;
     private final int trailMaxPoints;
     private final String language;
+    private final boolean diagnostics;
 
     public AppConfig(Properties p) {
         canvasWidth = readDouble(p, "canvas.width", 1200, 100, 10000);
@@ -29,6 +30,7 @@ public class AppConfig {
         simulationSpeed = readDouble(p, "simulation.speed", 1.0, 0, 100);
         trailMaxPoints = (int) readDouble(p, "trail.maxPoints", 150, 0, 100000);
         language = readLanguage(p, "app.language", "ru");
+        diagnostics = readBoolean(p, "ui.diagnostics", false);
     }
 
     public static AppConfig load() {
@@ -77,6 +79,22 @@ public class AppConfig {
         return def;
     }
 
+    private static boolean readBoolean(Properties p, String key, boolean def) {
+        String raw = p.getProperty(key);
+        if (raw == null) {
+            return def;
+        }
+        String v = raw.trim().toLowerCase();
+        if (v.equals("true")) {
+            return true;
+        }
+        if (v.equals("false")) {
+            return false;
+        }
+        log.warn("Неверное значение {}='{}', используется {}", key, raw, def);
+        return def;
+    }
+
     public double getCanvasWidth() {
         return canvasWidth;
     }
@@ -103,5 +121,9 @@ public class AppConfig {
 
     public String getLanguage() {
         return language;
+    }
+
+    public boolean isDiagnostics() {
+        return diagnostics;
     }
 }

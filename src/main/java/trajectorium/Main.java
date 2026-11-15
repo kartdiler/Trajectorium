@@ -40,6 +40,7 @@ public class Main extends Application {
     Camera camera = new Camera(config.getScale());
     EnergyMonitor energyMonitor = new EnergyMonitor(2000);
     SceneFileController files = new SceneFileController(simulation, factory, history);
+    LogAnalysisController logs = config.isDiagnostics() ? new LogAnalysisController() : null;
 
     BodyInfoPanel infoPanel;
     boolean following = false;
@@ -71,7 +72,7 @@ public class Main extends Application {
 
         ReportFileController reports = new ReportFileController(simulation, () -> CanvasSnapshot.png(canvas));
 
-        ControlPanel controlPanel = new ControlPanel(simulation, history, this::buildDefaultScene, files, reports);
+        ControlPanel controlPanel = new ControlPanel(simulation, history, this::buildDefaultScene, files, reports, logs);
         infoPanel = new BodyInfoPanel(simulation, history);
         VBox sideBar = new VBox(controlPanel, infoPanel);
         sideBar.setStyle("-fx-background-color: #222222");

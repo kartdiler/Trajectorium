@@ -24,6 +24,7 @@ public class ControlPanel extends VBox {
     private final Button redoButton = new Button();
     private final Button saveButton = new Button();
     private final Button openButton = new Button();
+    private final Button logButton = new Button();
     private final MenuButton exportButton = new MenuButton();
     private final MenuItem exportExcelItem = new MenuItem();
     private final MenuItem exportWordItem = new MenuItem();
@@ -41,7 +42,7 @@ public class ControlPanel extends VBox {
             .observableArrayList("Русский", "English"));
 
     public ControlPanel(Simulation sim, CommandHistory history, Runnable onReset, SceneFileController files,
-                        ReportFileController reports) {
+                        ReportFileController reports, LogAnalysisController logs) {
         super(10);
         this.sim = sim;
         this.history = history;
@@ -90,6 +91,9 @@ public class ControlPanel extends VBox {
         redoButton.setOnAction(e -> history.redo());
         saveButton.setOnAction(e -> files.save(getScene().getWindow()));
         openButton.setOnAction(e -> files.load(getScene().getWindow()));
+        if (logs != null) {
+            logButton.setOnAction(e -> logs.show(getScene().getWindow()));
+        }
 
         speedSlider.valueProperty().addListener((obs, old, now) -> showSpeed(now.doubleValue()));
         speedSlider.setOnMouseReleased(e -> {
@@ -154,7 +158,7 @@ public class ControlPanel extends VBox {
         I18n.addListener(this::updateTexts);
 
         for (Control c : List.of(pauseButton, resetButton, undoButton, redoButton, speedSlider, integratorBox,
-                saveButton, openButton, presetBox, languageBox, exportButton)) {
+                saveButton, openButton, presetBox, languageBox, exportButton, logButton)) {
             c.setFocusTraversable(false);
         }
 
@@ -162,7 +166,7 @@ public class ControlPanel extends VBox {
                 new HBox(8, pauseButton, resetButton),
                 new HBox(8, undoButton, redoButton),
                 new HBox(8, saveButton, openButton),
-                exportButton,
+                logs == null ? exportButton : new HBox(8, exportButton, logButton),
                 presetBox,
                 speedLabel, speedSlider, timeLabel,
                 integratorLabel, integratorBox,
@@ -181,6 +185,7 @@ public class ControlPanel extends VBox {
         openButton.setText(I18n.get("control.open"));
         pauseButton.setText(I18n.get(sim.isRunning() ? "control.pause" : "control.resume"));
         exportButton.setText(I18n.get("control.export"));
+        logButton.setText(I18n.get("control.log"));
         exportExcelItem.setText(I18n.get("control.export.excel"));
         exportWordItem.setText(I18n.get("control.export.word"));
         integratorLabel.setText(I18n.get("control.integrator"));
