@@ -171,6 +171,7 @@ public class Main extends Application {
         Scene scene = new Scene(root, Color.BLACK);
         stage.setScene(scene);
         stage.setTitle("Trajectorium");
+        stage.setMaximized(true);
         stage.show();
 
         stage.setOnCloseRequest(e -> log.info("Приложение закрыто"));
