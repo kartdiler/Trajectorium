@@ -1,5 +1,6 @@
 package trajectorium.io;
 
+import trajectorium.Limits;
 import trajectorium.i18n.I18n;
 
 import java.util.List;
@@ -7,7 +8,7 @@ import java.util.regex.Pattern;
 
 public final class SceneValidator {
     public static final int MAX_BODIES = 500;
-    public static final double MAX_ABS = 1e6;
+    public static final double MAX_ABS = Limits.MAX_ABS;
     private static final Pattern HEX_COLOR = Pattern.compile("^#[0-9A-Fa-f]{6}$");
 
     private SceneValidator() {}
@@ -59,7 +60,7 @@ public final class SceneValidator {
         }
 
         String where = "Тело №" + number + ": ";
-        if (b.name() == null || b.name().isBlank() || b.name().length() > 50) {
+        if (b.name() == null || b.name().isBlank() || b.name().length() > Limits.MAX_NAME_LENGTH) {
             throw new SceneFormatException(I18n.format("error.body.name", number));
         }
 
@@ -73,7 +74,7 @@ public final class SceneValidator {
             }
         }
 
-        if (!(Double.isFinite(b.canvasRadius()) && b.canvasRadius() > 0 && b.canvasRadius() <= 100)) {
+        if (!(Double.isFinite(b.canvasRadius()) && b.canvasRadius() > 0 && b.canvasRadius() <= Limits.MAX_RADIUS_PX)) {
             throw new SceneFormatException(I18n.format("error.body.radius", number));
         }
 

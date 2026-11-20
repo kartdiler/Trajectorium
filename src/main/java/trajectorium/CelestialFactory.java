@@ -30,8 +30,8 @@ public class CelestialFactory {
     private final double scale;
 
     public CelestialFactory(Simulation simulation, double scale) {
-        this.simulation = simulation;
-        this.scale = scale;
+        this.simulation = Check.notNull(simulation, "симуляция");
+        this.scale = Check.positive(scale, "масштаб");
     }
 
     public static double circularVelocity(double centralMass, double r) {
@@ -47,6 +47,9 @@ public class CelestialFactory {
     public Celestial createOrbiting(String name, double massSolar, Celestial parent,
                                     double orbitRadius, double canvasRadius, Color color,
                                     boolean counterClockwise) {
+        Check.notNull(parent, "родительское тело");
+        Check.positive(orbitRadius, "радиус орбиты");
+
         double dt = simulation.getDt();
         double[] parentPos = parent.getPos();
         double[] parentVelocity = parent.getVelocity(dt);
@@ -61,12 +64,14 @@ public class CelestialFactory {
 
     public Celestial createFree(String name, double massValue, MassUnit unit, double x, double y,
                                 double vx, double vy, double canvasRadius, Color color) {
+        Check.notNull(unit, "единица массы");
+
         return register(new Celestial(name, unit.toSolarMasses(massValue), x, y, vx, vy, canvasRadius,
                                       color, simulation.getBodies(), simulation.getDt(), scale));
     }
 
     public void setTrailMaxPoints(int n) {
-        this.trailMaxPoints = n;
+        this.trailMaxPoints = Check.atLeast(n, 0, "длина следа");
     }
 
     private Celestial register(Celestial body) {

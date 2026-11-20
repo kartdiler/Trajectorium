@@ -19,6 +19,18 @@ public class Celestial {
 
     public Celestial(String n, double m, double x, double y, double vx, double vy,
               double canvRad, Color col, List<Celestial> other, double dt, double scale) {
+        Check.text(n, "имя тела", Limits.MAX_NAME_LENGTH);
+        Check.positiveAtMost(m, Limits.MAX_ABS, "масса");
+        Check.inRange(x, -Limits.MAX_ABS, Limits.MAX_ABS, "координата x");
+        Check.inRange(y, -Limits.MAX_ABS, Limits.MAX_ABS, "координата y");
+        Check.inRange(vx, -Limits.MAX_ABS, Limits.MAX_ABS, "скорость vx");
+        Check.inRange(vy, -Limits.MAX_ABS, Limits.MAX_ABS, "скорость vy");
+        Check.positiveAtMost(canvRad, Limits.MAX_RADIUS_PX, "радиус на экране");
+        Check.notNull(col, "цвет");
+        Check.notNull(other, "список тел");
+        Check.positive(dt, "шаг dt");
+        Check.positive(scale, "масштаб");
+
         this.name = n;
         this.mass = m;
         this.xPos = x;
@@ -69,7 +81,7 @@ public class Celestial {
         return mass;
     }
     public void setMass(double newMass) {
-        mass = newMass;
+        mass = Check.positiveAtMost(newMass, Limits.MAX_ABS, "масса");
     }
 
     public String getName() {
@@ -83,8 +95,8 @@ public class Celestial {
         return new double[]{xPos, yPos};
     }
     public void setPos(double x, double y) {
-        xPos = x;
-        yPos = y;
+        xPos = Check.inRange(x, -Limits.MAX_ABS, Limits.MAX_ABS, "координата x");
+        yPos = Check.inRange(y, -Limits.MAX_ABS, Limits.MAX_ABS, "координата y");
     }
 
     public double[] getPrevPos() {

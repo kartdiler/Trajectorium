@@ -21,10 +21,15 @@ public class Simulation {
     private Integrator integrator = new VerletIntegrator();
 
     public Simulation(double dt) {
-        this.dt = dt;
+        this.dt = Check.positive(dt, "шаг dt");
     }
 
     public void addBody(Celestial body) {
+        Check.notNull(body, "тело");
+        if (celestials.contains(body)) {
+            throw new IllegalArgumentException("Тело \"" + body.getName() + "\" уже добавлено в симуляцию");
+        }
+
         celestials.add(body);
         log.info("Тело добавлено: {} (масса {} Солнц)", body.getName(), body.getMass());
         notifyListeners(l -> l.onBodyAdded(body));
@@ -92,6 +97,7 @@ public class Simulation {
     }
 
     public void setIntegrator(Integrator integrator) {
+        Check.notNull(integrator, "интегратор");
         this.integrator = integrator;
         log.info("Интегратор: {}", integrator.getName());
         notifyListeners(l -> l.onIntegratorChanged(integrator));
@@ -129,6 +135,10 @@ public class Simulation {
     }
 
     public void setSimulationSpeed(double speed) {
+        if (Double.isNaN(speed)) {
+            throw new IllegalArgumentException("Параметр \"скорость симуляции\" не должен быть NaN");
+        }
+
         double clamped = Math.max(0, Math.min(speed, 100));
         if (clamped != this.simulationSpeed) {
             this.simulationSpeed = speed;
@@ -146,7 +156,7 @@ public class Simulation {
     }
 
     public void addListener(SimulationListener l) {
-        listeners.add(l);
+        listeners.add(Check.notNull(l, "подписчик"));
     }
 
     public void removeListener(SimulationListener l) {

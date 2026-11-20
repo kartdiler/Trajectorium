@@ -9,7 +9,7 @@ public class Trail {
     private boolean enabled = true;
 
     public Trail(int maxPoints) {
-        this.maxPoints = maxPoints;
+        this.maxPoints = Check.atLeast(maxPoints, 0, "число точек");
     }
 
     public void addPoint(double x, double y) {
@@ -34,7 +34,7 @@ public class Trail {
     }
 
     public void setMaxPoints(int maxPoints) {
-        this.maxPoints = maxPoints;
+        this.maxPoints = Check.atLeast(maxPoints, 0, "число точек");
         while (points.size() > maxPoints) {
             points.removeFirst();
         }
