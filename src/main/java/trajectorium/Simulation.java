@@ -141,10 +141,10 @@ public class Simulation {
 
         double clamped = Math.max(0, Math.min(speed, 100));
         if (clamped != this.simulationSpeed) {
-            this.simulationSpeed = speed;
             log.debug("Скорость симуляции: {}", this.simulationSpeed);
             notifyListeners(l -> l.onSpeedChanged(clamped));
         }
+        this.simulationSpeed = clamped;
     }
 
     public double getSimulationSpeed() {
