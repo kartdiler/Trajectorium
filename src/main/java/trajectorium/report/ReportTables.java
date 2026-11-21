@@ -5,6 +5,7 @@ import trajectorium.i18n.I18n;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -76,5 +77,34 @@ public final class ReportTables {
             case DATETIME -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
                     .withLocale(locale).format((LocalDateTime) value);
         };
+    }
+
+    public static List<List<String>> bodyRows(ReportData data, List<Column> columns, Locale locale) {
+        List<List<String>> rows = new ArrayList<>();
+        for (ReportData.BodyRow body : data.bodies()) {
+            List<String> row = new ArrayList<>();
+            for (Column c : columns) row.add(format(c.kind(), c.value().apply(body), locale));
+            rows.add(row);
+        }
+        return rows;
+    }
+
+    public static List<List<String>> summaryRows(ReportData data, Locale locale) {
+        List<List<String>> rows = new ArrayList<>();
+        for (Item item : summaryItems(data)) {
+            rows.add(List.of(I18n.get(item.labelKey()), format(item.kind(), item.value(), locale)));
+        }
+        return rows;
+    }
+
+    public static List<List<String>> classRows(ReportData data, Locale locale) {
+        List<List<String>> rows = new ArrayList<>();
+        for (ReportData.ClassStat c : data.classes()) {
+            rows.add(List.of(I18n.get(c.massClass().labelKey()),
+                    format(Kind.INTEGER, c.count(), locale),
+                    format(Kind.SCIENTIFIC, c.totalMass(), locale),
+                    format(Kind.DECIMAL, c.averageSpeed(), locale)));
+        }
+        return rows;
     }
 }
