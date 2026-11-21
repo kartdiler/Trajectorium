@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Properties;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AppConfigTest {
     @Test
@@ -49,5 +49,18 @@ public class AppConfigTest {
         Properties unknown = new Properties();
         unknown.setProperty("app.language", "xx");
         assertEquals("ru", new AppConfig(unknown).getLanguage());
+    }
+
+    @Test
+    void windowRememberDefaultsToTrueAndParsesBooleans() {
+        assertTrue(new AppConfig(new Properties()).isWindowRemember());
+
+        Properties off = new Properties();
+        off.setProperty("window.remember", "false");
+        assertFalse(new AppConfig(off).isWindowRemember());
+
+        Properties bad = new Properties();
+        bad.setProperty("window.remember", "maybe");
+        assertTrue(new AppConfig(bad).isWindowRemember());
     }
 }
