@@ -21,6 +21,7 @@ import trajectorium.ui.*;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 public class Main extends Application {
     public static void main() {
@@ -407,12 +408,25 @@ public class Main extends Application {
     }
 
     private void showNewBodyDialog(Window owner, double x, double y, double vx, double vy) {
-        NewBodyDialog.show(owner, x, y, vx, vy, I18n.format("body.default", bodyCounter + 1), speedHint(x, y))
+        NewBodyDialog.show(owner, x, y, vx, vy, I18n.format("body.default", bodyCounter + 1),
+                        speedHint(x, y), radiusPx -> placementError(x, y, radiusPx))
                 .ifPresent(d -> {
                     history.execute(new AddBodyCommand(simulation, () ->
                             factory.createFree(d.name(), d.mass(), d.unit(), x, y,
                                     d.vx(), d.vy(), d.radius(), d.color())));
                     bodyCounter++;
                 });
+    }
+
+    private String placementError(double x, double y, double radiusPx) {
+        double realRadius = radiusPx / config.getScale();
+        Optional<Celestial> hit = Placement.findOverlap(simulation.getBodies(), x, y, realRadius);
+        if (hit.isEmpty()) {
+            return null;
+        }
+
+        double[] p = hit.get().getPos();
+        return I18n.format("dialog.new.overlap", hit.get().getName(),
+                Math.hypot(x - p[0], y - p[1]) , hit.get().getRealRadius() + realRadius);
     }
 }

@@ -9,12 +9,15 @@ import javafx.scene.paint.Color;
 import javafx.stage.Window;
 import javafx.util.StringConverter;
 import trajectorium.CelestialFactory.MassUnit;
+import trajectorium.Limits;
 import trajectorium.i18n.I18n;
 import trajectorium.text.QuantityParser;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.function.DoubleFunction;
 
 public final class NewBodyDialog {
     private NewBodyDialog() {}
@@ -23,7 +26,7 @@ public final class NewBodyDialog {
                          double vx, double vy, int radius, Color color) {}
 
     public static Optional<Result> show(Window owner, double x, double y, double vx0, double vy0,
-                                        String defaultName, String speedHint) {
+                                        String defaultName, String speedHint, DoubleFunction<String> placementCheck) {
         Dialog<Result> dialog = new Dialog<Result>();
         dialog.initOwner(owner);
         dialog.setTitle(I18n.get("dialog.new.title"));
@@ -75,22 +78,39 @@ public final class NewBodyDialog {
 
         dialog.getDialogPane().setContent(grid);
 
+        Label overlap = new Label();
+        overlap.setStyle("-fx-text-fill: #c62828");
+        overlap.setWrapText(true);
+        overlap.setMaxWidth(420);
+        grid.add(overlap, 0, 8, 3, 1);
+
         Node addButton = dialog.getDialogPane().lookupButton(addType);
         Runnable validate = () -> {
             boolean nameOk = InputParser.isValidName(name.getText());
-            boolean massOk = QuantityParser.parseMass(mass.getText()).isPresent();
-            boolean vxOk = QuantityParser.parseVelocity(vx.getText()).isPresent();
-            boolean vyOk = QuantityParser.parseVelocity(vy.getText()).isPresent();
+
+            MassUnit chosen = unit.getValue();
+            boolean massOk = QuantityParser.parseMass(mass.getText())
+                    .map(m -> (m.unit() != null ? m.unit() : chosen).toSolarMasses(m.value()))
+                    .filter(v -> v > 0 && v <= Limits.MAX_ABS)
+                    .isPresent();
+            boolean vxOk = velocityOk(vx.getText());
+            boolean vyOk = velocityOk(vy.getText());
+
+            String overlapMessage = placementCheck.apply(radius.getValue());
+            overlap.setText(overlapMessage == null ? "" : overlapMessage);
+
             mark(name, nameOk);
             mark(mass, massOk);
             mark(vx, vxOk);
             mark(vy, vyOk);
-            addButton.setDisable(!(nameOk && massOk && vxOk && vyOk));
+            addButton.setDisable(!(nameOk && massOk && vxOk && vyOk) || overlapMessage != null);
         };
 
         for (TextField f : List.of(name, mass, vx, vy)) {
             f.textProperty().addListener((obs, old, now) -> validate.run());
         }
+        unit.valueProperty().addListener((obs, old, now) -> validate.run());
+        radius.valueProperty().addListener((obs, old, now) -> validate.run());
         validate.run();
 
         dialog.setResultConverter(button -> {
@@ -127,5 +147,10 @@ public final class NewBodyDialog {
 
     private static String fmt(double v) {
         return String.format(Locale.ROOT, "%.4f", v);
+    }
+
+    private static boolean velocityOk(String text) {
+        OptionalDouble v = QuantityParser.parseVelocity(text);
+        return v.isPresent() && Math.abs(v.getAsDouble()) <= Limits.MAX_ABS;
     }
 }
