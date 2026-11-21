@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import trajectorium.command.*;
 import trajectorium.i18n.I18n;
+import trajectorium.io.WindowStateStore;
 import trajectorium.ui.*;
 
 import java.util.List;
@@ -34,14 +35,14 @@ public class Main extends Application {
     private static final double CLICK_MIN_PX = 20;
     private static final double DRAG_THRESHOLD = 4;
 
-    AppConfig config = AppConfig.load();
-    Simulation simulation = new Simulation(config.getDt());
+    AppConfig config;
+    Simulation simulation;
+    CelestialFactory factory;
+    Camera camera;
+    SceneFileController files;
     CommandHistory history = new CommandHistory(50);
-    CelestialFactory factory = new CelestialFactory(simulation, config.getScale());
-    Camera camera = new Camera(config.getScale());
     EnergyMonitor energyMonitor = new EnergyMonitor(2000);
-    SceneFileController files = new SceneFileController(simulation, factory, history);
-    LogAnalysisController logs = config.isDiagnostics() ? new LogAnalysisController() : null;
+    LogAnalysisController logs;
 
     BodyInfoPanel infoPanel;
     boolean following = false;
@@ -56,6 +57,16 @@ public class Main extends Application {
     double placePressX, placePressY;
     double placeX, placeY;
     double placeEndX, placeEndY;
+
+    @Override
+    public void init() {
+        config = AppConfig.load(getParameters().getRaw());
+        simulation = new Simulation(config.getDt());
+        factory = new CelestialFactory(simulation, config.getScale());
+        camera = new Camera(config.getScale());
+        files = new SceneFileController(simulation, factory, history);
+        logs = config.isDiagnostics() ? new LogAnalysisController() : null;
+    }
 
     @Override
     public void start(Stage stage) {
@@ -169,13 +180,22 @@ public class Main extends Application {
 
         timer.start();
 
+        UserDirs dirs = UserDirs.resolve(System.getenv(), System.getProperties());
+        WindowStateStore windowStore = new WindowStateStore(dirs.windowFile());
+
         Scene scene = new Scene(root, Color.BLACK);
         stage.setScene(scene);
         stage.setTitle("Trajectorium");
-        stage.setMaximized(true);
+        if (config.isWindowRemember()) {
+            windowStore.load().ifPresent(state -> WindowSettings.apply(stage, state));
+        }
+        stage.setOnHiding(e -> {
+            log.info("Приложение закрыто");
+            if (config.isWindowRemember()) {
+                windowStore.save(WindowSettings.capture(stage));
+            }
+        });
         stage.show();
-
-        stage.setOnCloseRequest(e -> log.info("Приложение закрыто"));
 
         scene.setOnKeyPressed(e -> {
             if (e.isControlDown() && e.getCode() == KeyCode.Z) {

@@ -65,7 +65,7 @@ public final class ConfigLoader {
         for (String arg : args) {
             if (COMMAND_FLAGS.contains(arg)) continue;
             Matcher m = ARGUMENT.matcher(arg);
-            if (m.matches()) {
+            if (!m.matches()) {
                 warnings.add("Неизвестный аргумент: " + arg);
                 continue;
             }
@@ -83,7 +83,7 @@ public final class ConfigLoader {
     }
 
     static String envName(String key) {
-        return ENV_PREFIX + key.toUpperCase(Locale.ROOT).replaceAll("[^A-z0-9]", "_");
+        return ENV_PREFIX + key.toUpperCase(Locale.ROOT).replaceAll("[^A-Z0-9]", "_");
     }
 
     private static Properties readResource(ResourceOpener resources, String path, List<String> warnings) {
