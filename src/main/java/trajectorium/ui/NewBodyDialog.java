@@ -60,7 +60,7 @@ public final class NewBodyDialog {
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(8);
-        grid.setPadding(new Insets(12));
+        grid.setPadding(new Insets(14));
         grid.addRow(0, new Label(I18n.get("dialog.new.name")), name);
         grid.addRow(1, new Label(I18n.get("dialog.new.mass")), mass, unit);
         grid.addRow(2, new Label(I18n.get("dialog.new.vx")), vx);
@@ -76,13 +76,13 @@ public final class NewBodyDialog {
         formats.setStyle("-fx-text-fill: gray;");
         grid.add(formats, 0, 7, 3, 1);
 
-        dialog.getDialogPane().setContent(grid);
-
         Label overlap = new Label();
         overlap.setStyle("-fx-text-fill: #c62828");
         overlap.setWrapText(true);
         overlap.setMaxWidth(420);
         grid.add(overlap, 0, 8, 3, 1);
+
+        dialog.getDialogPane().setContent(grid);
 
         Node addButton = dialog.getDialogPane().lookupButton(addType);
         Runnable validate = () -> {

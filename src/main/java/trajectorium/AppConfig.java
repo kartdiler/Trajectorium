@@ -7,11 +7,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.Properties;
+import java.util.*;
 
 public class AppConfig {
     private static final Logger log = LoggerFactory.getLogger(AppConfig.class);
-    private static final String RESOURCE = "/config.properties";
+
+    public static final Set<String> KNOWN_KEYS = Set.of(
+            "canvas.width", "canvas.height", "view.scale", "simulation.stepDays", "simulation.speed",
+            "trail.maxPoints", "app.language", "ui.diagnostics", "window.remember"
+    );
 
     private final double canvasWidth;
     private final double canvasHeight;
@@ -21,6 +25,7 @@ public class AppConfig {
     private final int trailMaxPoints;
     private final String language;
     private final boolean diagnostics;
+    private final boolean windowRemember;
 
     public AppConfig(Properties p) {
         canvasWidth = readDouble(p, "canvas.width", 1200, 100, 10000);
@@ -31,22 +36,32 @@ public class AppConfig {
         trailMaxPoints = (int) readDouble(p, "trail.maxPoints", 150, 0, 100000);
         language = readLanguage(p, "app.language", "ru");
         diagnostics = readBoolean(p, "ui.diagnostics", false);
+        windowRemember = readBoolean(p, "window.remember", true);
+    }
+
+    public Map<String, Object> asMap() {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("canvas.width", canvasWidth);
+        m.put("canvas.height", canvasHeight);
+        m.put("view.scale", scale);
+        m.put("simulation.stepDays", stepDays);
+        m.put("simulation.speed", simulationSpeed);
+        m.put("trail.maxPoints", trailMaxPoints);
+        m.put("app.language", language);
+        m.put("ui.diagnostics", diagnostics);
+        m.put("window.remember", windowRemember);
+        return m;
+    }
+
+    public static AppConfig load(List<String> args) {
+        ConfigLoader.Loaded loaded = ConfigLoader.loadDefault(args);
+        loaded.warnings().forEach(w -> log.warn("Конфигурация: {}", w));
+        loaded.sources().forEach((key, source) -> log.debug("Конфигурация: {} <- {}", key, source));
+        return new AppConfig(loaded.properties());
     }
 
     public static AppConfig load() {
-        Properties p = new Properties();
-        try(InputStream in = AppConfig.class.getResourceAsStream(RESOURCE)) {
-            if (in == null) {
-                log.warn("config.properties не найден, используются значения по умолчанию");
-            } else {
-                p.load(new InputStreamReader(in, StandardCharsets.UTF_8));
-                log.info("Конфигурация загружена из config.properties");
-            }
-        } catch (IOException ex) {
-            log.warn("Не удалось прочитать config.properties", ex);
-        }
-
-        return new AppConfig(p);
+        return load(List.of());
     }
 
     private static double readDouble(Properties p, String key, double def, double min, double max) {
@@ -107,6 +122,10 @@ public class AppConfig {
         return scale;
     }
 
+    public double getStepDays() {
+        return stepDays;
+    }
+
     public double getDt() {
         return stepDays / 365.25;
     }
@@ -125,5 +144,9 @@ public class AppConfig {
 
     public boolean isDiagnostics() {
         return diagnostics;
+    }
+
+    public boolean isWindowRemember() {
+        return windowRemember;
     }
 }
