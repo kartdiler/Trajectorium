@@ -44,4 +44,18 @@ public class ReportTableTest {
         assertTrue(ReportTables.compactBodyColumns().stream()
                 .noneMatch(c -> c.labelKey().equals("report.col.vx") || c.labelKey().equals("report.col.radius")));
     }
+
+    @Test
+    void rowHelpersProduceTextCells() {
+        ReportData data = ReportFixtures.sampleReport();
+        Locale ru = Locale.forLanguageTag("ru");
+
+        List<List<String>> bodies = ReportTables.bodyRows(data, ReportTables.compactBodyColumns(), ru);
+        assertEquals(3, bodies.size());
+        assertEquals("Earth", bodies.get(1).get(0));
+        assertEquals(ReportTables.compactBodyColumns().size(), bodies.get(1).size());
+
+        assertEquals(16, ReportTables.summaryRows(data, ru).size());
+        assertEquals(3, ReportTables.classRows(data, ru).size());
+    }
 }
