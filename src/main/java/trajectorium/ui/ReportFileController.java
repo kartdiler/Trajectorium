@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.util.function.Supplier;
+import java.util.List;
 
 public class ReportFileController {
     private static final Logger log = LoggerFactory.getLogger(ReportFileController.class);
@@ -43,6 +44,11 @@ public class ReportFileController {
         export(owner, data, new WordReportRenderer(image), "report.dialog.word", "report.filter.word");
     }
 
+    public void exportText(Window owner) {
+        ReportData data = ReportBuilder.build(sim, LocalDateTime.now());
+        export(owner, data, new TextReportRenderer(), "report.dialog.text", "report.filter.text");
+    }
+
     private void export(Window owner, ReportData data, ReportRenderer renderer, String titleKey, String filterKey) {
         boolean wasRunning = sim.isRunning();
         if (wasRunning) {
@@ -59,6 +65,61 @@ public class ReportFileController {
                 sim.play();
             }
         }
+    }
+
+    public void print(Window owner) {
+        ReportData data = ReportBuilder.build(sim, LocalDateTime.now());
+        List<String> lines = TextReportRenderer.lines(data);
+
+        boolean wasRunning = sim.isRunning();
+        if (wasRunning) {
+            sim.pause();
+        }
+        try {
+            long started = System.nanoTime();
+            ReportPrinter.Result result = ReportPrinter.print(owner, lines, I18n.get("print.job"));
+            long millis = (System.nanoTime() - started) / 1_000_000;
+
+            switch (result.status()) {
+                case DONE -> {
+                    log.info("Отчет отправлен на печать: {} тел, {} стр., {} мс", data.summary().bodyCount(), result.pages(), millis);
+                    info(owner, I18n.format("print.done", result.pages()));
+                }
+                case CANCELLED -> log.info("Печать отменена пользователем");
+                case NO_PRINTER -> {
+                    log.warn("Печать невозможна: принтер не найден");
+                    error(owner, I18n.get("print.error.failed"), I18n.get("print.error.noprinter"));
+                }
+                case FAILED -> {
+                    log.error("Печать не удалась на этапе {}: {}", result.pages(), result.message());
+                    error(owner, I18n.get("print.error.failed"), String.valueOf(result.message()));
+                }
+            }
+        } finally {
+            if (wasRunning) {
+                sim.play();
+            }
+        }
+    }
+
+    private void info(Window owner, String text) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION, "",
+                new ButtonType(I18n.get("report.done.close"), ButtonBar.ButtonData.CANCEL_CLOSE));
+        alert.initOwner(owner);
+        alert.setTitle("Trajectorium");
+        alert.setHeaderText(null);
+        alert.getDialogPane().setContent(wrapped(text));
+        alert.showAndWait();
+    }
+
+    private void error(Window owner, String header, String text) {
+        Alert alert = new Alert(Alert.AlertType.ERROR, "",
+                new ButtonType(I18n.get("dialog.ok"), ButtonBar.ButtonData.OK_DONE));
+        alert.initOwner(owner);
+        alert.setTitle("Trajectorium");
+        alert.setHeaderText(header);
+        alert.getDialogPane().setContent(wrapped(text));
+        alert.showAndWait();
     }
 
     private File choose(Window owner, ReportData data, ReportRenderer renderer, String title, String filterText) {

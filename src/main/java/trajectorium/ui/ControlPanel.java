@@ -28,6 +28,8 @@ public class ControlPanel extends VBox {
     private final MenuButton exportButton = new MenuButton();
     private final MenuItem exportExcelItem = new MenuItem();
     private final MenuItem exportWordItem = new MenuItem();
+    private final MenuItem exportTextItem = new MenuItem();
+    private final MenuItem printItem = new MenuItem();
     private final Slider speedSlider = new Slider(0.1, 20, 1);
     private final Label speedLabel = new Label();
     private final Label timeLabel = new Label();
@@ -121,9 +123,11 @@ public class ControlPanel extends VBox {
             I18n.setLocale(languageBox.getSelectionModel().getSelectedIndex() == 1 ? I18n.EN : I18n.RU);
         });
 
-        exportButton.getItems().addAll(exportExcelItem, exportWordItem);
+        exportButton.getItems().addAll(exportExcelItem, exportWordItem, exportTextItem, new SeparatorMenuItem(), printItem);
         exportExcelItem.setOnAction(e -> reports.exportExcel(getScene().getWindow()));
         exportWordItem.setOnAction(e -> reports.exportWord(getScene().getWindow()));
+        exportTextItem.setOnAction(e -> reports.exportText(getScene().getWindow()));
+        printItem.setOnAction(e -> reports.print(getScene().getWindow()));
 
         history.setOnChange(this::refreshHistoryButtons);
 
@@ -188,6 +192,8 @@ public class ControlPanel extends VBox {
         logButton.setText(I18n.get("control.log"));
         exportExcelItem.setText(I18n.get("control.export.excel"));
         exportWordItem.setText(I18n.get("control.export.word"));
+        exportTextItem.setText(I18n.get("control.export.text"));
+        printItem.setText(I18n.get("control.print"));
         integratorLabel.setText(I18n.get("control.integrator"));
         help.setText(I18n.get("control.help"));
         presetBox.setPromptText(I18n.get("control.preset.prompt"));
