@@ -17,7 +17,8 @@ public final class ConfigLoader {
     public static final String ENV_PREFIX = "TRAJECTORIUM_";
     private static final Pattern ARGUMENT = Pattern.compile("^--(?<key>[\\w.]+)=(?<value>.*)$");
     private static final Pattern PROFILE_NAME = Pattern.compile("^[a-z0-9][a-z0-9_-]{0,19}$");
-    private static final Set<String> COMMAND_FLAGS = Set.of("--print-config", "--init-config");
+    private static final Set<String> COMMAND_FLAGS = Set.of("--print-config", "--init-config", "--headless");
+    private static final Set<String> COMMAND_OPTIONS = Set.of("scene", "years", "steps", "format", "out");
 
     @FunctionalInterface
     public interface ResourceOpener {
@@ -70,7 +71,7 @@ public final class ConfigLoader {
                 continue;
             }
             String key = m.group("key");
-            if (key.equals("profile")) continue;
+            if (key.equals("profile") || COMMAND_OPTIONS.contains(key)) continue;
             if (!AppConfig.KNOWN_KEYS.contains(key)) {
                 warnings.add("Неизвестный параметр командной строки: --" + key);
                 continue;
