@@ -56,4 +56,9 @@ public final class SceneStorage {
         SceneValidator.validate(data);
         return data;
     }
+
+    public static byte[] toBytes(SceneData data) throws IOException, SceneFormatException {
+        SceneValidator.validate(data);
+        return MAPPER.writeValueAsBytes(data);
+    }
 }
