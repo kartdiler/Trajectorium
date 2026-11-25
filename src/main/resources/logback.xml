@@ -1,5 +1,6 @@
 <configuration scan="true" scanPeriod="10 seconds">
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <target>${LOG_TARGET:-System.out}</target>
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} [%level] %logger{20} - %msg%n</pattern>
             <charset>UTF-8</charset>
@@ -7,9 +8,9 @@
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/trajectorium.log</file>
+        <file>${TRAJECTORIUM_HOME:-.}/logs/trajectorium.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>logs/trajectorium.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <fileNamePattern>${TRAJECTORIUM_HOME:-.}/logs/trajectorium.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <maxFileSize>5MB</maxFileSize>
             <maxHistory>7</maxHistory>
         </rollingPolicy>
