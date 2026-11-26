@@ -57,7 +57,7 @@ public record HeadlessOptions(String scene, Long steps, Double years, Format for
             }
             String key = m.group("key");
             if (OWN_KEYS.contains(key)) {
-                values.put(key, m.group("value")).trim();
+                values.put(key, m.group("value").trim());
             } else if (!key.equals("profile") && !AppConfig.KNOWN_KEYS.contains(key)) {
                 problems.add("Неизвестный параметр: --" + key);
             }

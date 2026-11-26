@@ -1,0 +1,33 @@
+name: trajectorium
+
+x-user: &user "${HOST_UID:-10001}:${HOST_GID:-10001}"
+
+services:
+  simulator:
+    build:
+      context: .
+      target: runtime
+      args:
+        JAVA_VERSION: "26"
+    image: trajectorium:${TRAJECTORIUM_VERSION:-dev}
+    user: *user
+    environment:
+      TRAJECTORIUM_HOME: /data
+      TRAJECTORIUM_SIMULATION_STEPDAYS: "0.5"
+      TRAJECTORIUM_APP_LANGUAGE: ru
+    command: ["--scene=preset:binary-star", "--years=5", "--format=csv", "--out=/data/result.csv"]
+    volumes:
+      - ./data:/data
+
+  log-analyzer:
+    image: trajectorium:${TRAJECTORIUM_VERSION:-dev}
+    user: *user
+    depends_on:
+      simulator:
+        condition: service_completed_successfully
+    environment:
+      TRAJECTORIUM_HOME: /data
+    entrypoint: ["java", "-Djava.awt.headless=true", "-cp", "app.jar:lib/*", "trajectorium.Launcher"]
+    command: ["--analuze-log", "/data/logs/trajectorium.log"]
+    volumes:
+      - ./data:/data
